@@ -20,6 +20,15 @@
 - Android resources use lowercase underscore (e.g., `ic_launcher_background`).
 - Keep shared UI/state in `commonMain`; platform APIs in `androidMain`/`iosMain`.
 
+### Compose Previews
+- Provide a `@Preview` for every new Composable you add (including screens, widgets, and reusable UI).
+- Keep previews minimal and deterministic (no network or timers). Use small, hard-coded sample data.
+- Place previews alongside the composable in the same file and mark them `private`.
+
+### Commit Messages
+- After finishing a task, provide a single, one-line Conventional Commit message in your handoff (e.g., `feat: add GameScreen with previews`).
+- Use imperative mood, present tense; keep it concise and scoped to the change.
+
 ## Testing Guidelines
 - Framework: `kotlin.test` in `composeApp/src/commonTest`.
 - Name test classes with `...Test` and annotate methods with `@Test`.
