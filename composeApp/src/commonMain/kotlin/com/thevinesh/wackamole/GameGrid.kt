@@ -45,8 +45,10 @@ fun GameGrid(
 @Composable
 private fun GameGridPreview() {
     MaterialTheme {
-        val cells = remember { mutableStateListOf<Boolean>().also {
-            it.addAll(List(9) { it % 2 == 0 }) }
+        val cells = remember {
+            mutableStateListOf<Boolean>().also {
+                it.addAll(List(9) { it % 2 == 0 })
+            }
         }
         val emojis = remember { List(9) { listOf("🐹", "🐰", "🐵")[it % 3] } }
         GameGrid(cells = cells, emojis = emojis, onHit = {})

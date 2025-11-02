@@ -29,6 +29,11 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.random.Random
 
+const val MAX_MOLES_UP_AT_ANY_TIME = 1
+const val MOLE_UP_TIME_MIN_MS = 600L
+const val MOLE_UP_TIME_MAX_MS = 1200L
+const val DELAY_BETWEEN_MOLES_MS = 80L
+
 @Composable
 fun GameScreen() {
     var score by remember { mutableIntStateOf(0) }
@@ -39,7 +44,7 @@ fun GameScreen() {
 
     LaunchedEffect(running) {
         if (!running) return@LaunchedEffect
-        val remaining = LongArray(9) { 0L }
+        val remaining = LongArray(9)
         while (running) {
             for (i in 0 until 9) {
                 if (cells[i]) {
@@ -48,14 +53,14 @@ fun GameScreen() {
                 }
             }
             val upCount = cells.count { it }
-            if (upCount < 3) {
+            if (upCount < MAX_MOLES_UP_AT_ANY_TIME) {
                 val idx = Random.nextInt(0, 9)
                 if (!cells[idx]) {
                     cells[idx] = true
-                    remaining[idx] = Random.nextLong(600, 1200)
+                    remaining[idx] = Random.nextLong(MOLE_UP_TIME_MIN_MS, MOLE_UP_TIME_MAX_MS)
                 }
             }
-            delay(80L)
+            delay(DELAY_BETWEEN_MOLES_MS)
         }
     }
 
