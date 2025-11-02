@@ -35,8 +35,10 @@ fun MoleHole(
     ) {
         AnimatedVisibility(
             visible = isUp,
-            enter = fadeIn() + slideInVertically(animationSpec = tween(150)) { fullHeight -> fullHeight / 2 },
-            exit = fadeOut() + slideOutVertically(animationSpec = tween(150)) { fullHeight -> fullHeight / 2 }
+            enter = fadeIn() + slideInVertically(animationSpec = tween(150))
+            { fullHeight -> fullHeight / 2 },
+            exit = fadeOut() + slideOutVertically(animationSpec = tween(150))
+            { fullHeight -> fullHeight / 2 }
         ) {
             Box(
                 modifier = Modifier

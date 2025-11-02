@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,13 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.random.Random
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.random.Random
 
 @Composable
 fun GameScreen() {
@@ -60,49 +60,50 @@ fun GameScreen() {
     }
 
     Column(
-        modifier = Modifier
-            .safeContentPadding()
-            .padding(16.dp)
-            .fillMaxSize(),
+        modifier = Modifier.safeContentPadding(),
+        verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Wack-A-Mole",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-        )
+        Spacer(modifier = Modifier.size(16.dp))
         Text(
             text = "Score: $score",
             style = MaterialTheme.typography.headlineSmall
         )
-
-        GameGrid(
-            cells = cells,
-            emojis = emojis,
-            onHit = { index ->
-                if (cells[index]) {
-                    score += 1
-                    cells[index] = false
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Tap the emoji when it pops up!",
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.size(16.dp))
+            GameGrid(
+                cells = cells,
+                emojis = emojis,
+                onHit = { index ->
+                    if (cells[index]) {
+                        score += 1
+                        cells[index] = false
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.size(32.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(onClick = {
+                    score = 0
+                    for (i in 0 until 9) cells[i] = false
+                    running = true
+                }) { Text("Restart") }
+                Button(onClick = { running = !running }) {
+                    Text(if (running) "Pause" else "Resume")
                 }
             }
-        )
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = {
-                score = 0
-                for (i in 0 until 9) cells[i] = false
-                running = true
-            }) { Text("Restart") }
-            Button(onClick = { running = !running }) {
-                Text(if (running) "Pause" else "Resume")
-            }
         }
-        Spacer(modifier = Modifier.size(8.dp))
-        Text(
-            text = "Tap the emoji when it pops up!",
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center
-        )
     }
 }
 
@@ -114,6 +115,6 @@ private fun randomMoleEmoji(): String {
 @Preview
 @Composable
 private fun GameScreenPreview() {
-    MaterialTheme { GameScreen() }
+    MaterialTheme { Surface { GameScreen() } }
 }
 
