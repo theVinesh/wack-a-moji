@@ -51,6 +51,7 @@ internal fun GameOverOverlay(
             Text(
                 text = "⏰",
                 fontSize = 48.sp,
+                fontFamily = LocalEmojiFont.current,
             )
             Text(
                 text = "TIME'S UP!",

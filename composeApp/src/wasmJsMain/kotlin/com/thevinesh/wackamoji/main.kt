@@ -1,12 +1,20 @@
 package com.thevinesh.wackamoji
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.window.ComposeViewport
 import kotlinx.browser.document
+import org.jetbrains.compose.resources.Font
+import wackamole.composeapp.generated.resources.NotoColorEmoji
+import wackamole.composeapp.generated.resources.Res
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     ComposeViewport(document.body!!) {
-        App()
+        val emojiFontFamily = FontFamily(Font(Res.font.NotoColorEmoji))
+        CompositionLocalProvider(LocalEmojiFont provides emojiFontFamily) {
+            App()
+        }
     }
 }

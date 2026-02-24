@@ -1,6 +1,5 @@
 package com.thevinesh.wackamoji
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +14,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -25,18 +23,6 @@ fun GameScreen(viewModel: GameViewModel = viewModel { GameViewModel() }) {
     val state by viewModel.uiState.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Sky gradient background
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(WackAMojiColors.SkyTop, WackAMojiColors.SkyBottom)
-                )
-            )
-        }
-
-        // Clouds
-        CloudsBackground()
-
         // Main content
         Column(
             modifier = Modifier

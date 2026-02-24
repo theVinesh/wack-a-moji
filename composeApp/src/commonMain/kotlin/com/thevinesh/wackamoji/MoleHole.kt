@@ -104,6 +104,7 @@ fun MoleHole(
             Text(
                 text = emoji,
                 fontSize = 36.sp,
+                fontFamily = LocalEmojiFont.current,
                 modifier = Modifier.padding(4.dp)
             )
         }
