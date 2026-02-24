@@ -1,4 +1,4 @@
-package com.thevinesh.wackamole
+package com.thevinesh.wackamoji
 
 import androidx.compose.ui.graphics.Color
 

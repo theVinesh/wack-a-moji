@@ -48,11 +48,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.thevinesh.wackamole"
+    namespace = "com.thevinesh.wackamoji"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.thevinesh.wackamole"
+        applicationId = "com.thevinesh.wackamoji"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

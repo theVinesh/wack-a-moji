@@ -1,4 +1,4 @@
-package com.thevinesh.wackamole
+package com.thevinesh.wackamoji
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box

@@ -1,4 +1,4 @@
-package com.thevinesh.wackamole
+package com.thevinesh.wackamoji
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

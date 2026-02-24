@@ -1,4 +1,4 @@
-package com.thevinesh.wackamole
+package com.thevinesh.wackamoji
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

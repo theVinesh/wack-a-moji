@@ -1,4 +1,4 @@
-package com.thevinesh.wackamole
+package com.thevinesh.wackamoji
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween

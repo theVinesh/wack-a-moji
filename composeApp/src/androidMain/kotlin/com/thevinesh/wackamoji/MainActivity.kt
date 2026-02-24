@@ -1,4 +1,4 @@
-package com.thevinesh.wackamole
+package com.thevinesh.wackamoji
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

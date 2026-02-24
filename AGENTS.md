@@ -27,7 +27,7 @@ WackAMoji is a Kotlin Multiplatform (KMP) game targeting Android and iOS.
 ## Coding Style & Naming Conventions
 
 - Follow official Kotlin style (4‑space indent, max 100–120 cols).
-- Packages: `com.thevinesh.wackamole.*`.
+- Packages: `com.thevinesh.wackamoji.*`.
 - Types: `PascalCase`; functions/vars: `camelCase`; constants: `UPPER_SNAKE_CASE`.
 - Keep shared UI/state in `commonMain`; platform-specific bridges in `androidMain`/`iosMain`.
 

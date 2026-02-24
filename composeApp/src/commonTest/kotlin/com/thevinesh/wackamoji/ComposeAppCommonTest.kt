@@ -1,4 +1,4 @@
-package com.thevinesh.wackamole
+package com.thevinesh.wackamoji
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
