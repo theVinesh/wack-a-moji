@@ -20,11 +20,9 @@ object WackAMojiColors {
     // Game board
     val GrassGreen = Color(0xFF4ADE80)     // grass-green
     val GrassBorder = Color(0xFF16A34A)    // green-600
-    val GrassDetail = Color(0xFF22C55E)    // green-500
 
     // Holes
     val EarthBrown = Color(0xFF5D4037)     // earth-brown
-    val HoleInsetShadow = Color(0x99000000) // black/60%
     val HoleTopBorder = Color(0x33000000)  // black/20%
 
     // Buttons
