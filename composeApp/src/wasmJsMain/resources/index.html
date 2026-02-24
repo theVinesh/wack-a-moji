@@ -3,8 +3,22 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#38BDF8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WackAMoji">
     <title>WackAMoji</title>
+
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
     <style>
         html,
         body {
@@ -14,11 +28,157 @@
             height: 100%;
             overflow: hidden;
             background: #1a1a2e;
+            /* Game sky top color, fall back if JS takes over */
+            background-color: #38BDF8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Loading Screen Styles */
+        #loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #38BDF8, #BAE6FD);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 24px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            margin-bottom: 24px;
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        .loader-title {
+            color: #0C4A6E;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+            margin-bottom: 32px;
+        }
+
+        .progress-bar-container {
+            width: 200px;
+            height: 12px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-bar {
+            width: 30%;
+            height: 100%;
+            background-color: #F4257B;
+            /* Primary hot pink from game */
+            border-radius: 6px;
+            animation: load 3s infinite ease-in-out;
+        }
+
+        .loader-text {
+            color: #075985;
+            font-size: 16px;
+            margin-top: 16px;
+            font-weight: 500;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        @keyframes load {
+            0% {
+                width: 0%;
+                transform: translateX(0);
+            }
+
+            50% {
+                width: 30%;
+                transform: translateX(200px);
+            }
+
+            100% {
+                width: 0%;
+                transform: translateX(0);
+            }
         }
     </style>
 </head>
 
 <body>
+    <!-- Loading Screen -->
+    <div id="loader-container">
+        <img src="icon-192.png" alt="WackAMoji Logo" class="loader-logo">
+        <div class="loader-title">Wack-A-Moji</div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+        <div class="loader-text">Loading game assets...</div>
+    </div>
+
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, (err) => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // Loader dismissal logic
+        // Compose Multiplatform adds a canvas element when it starts up.
+        // We observe the DOM for this canvas to hide the loader.
+        document.addEventListener("DOMContentLoaded", () => {
+            const observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    if (mutation.addedNodes.length) {
+                        for (let i = 0; i < mutation.addedNodes.length; i++) {
+                            const node = mutation.addedNodes[i];
+                            // Compose inserts a canvas element
+                            if (node.nodeName.toLowerCase() === 'canvas') {
+                                const loader = document.getElementById('loader-container');
+                                if (loader) {
+                                    // Let the first frame render before hiding
+                                    setTimeout(() => {
+                                        loader.style.opacity = '0';
+                                        setTimeout(() => {
+                                            loader.remove();
+                                        }, 500); // Wait for transition to finish
+                                    }, 100);
+                                    observer.disconnect();
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Start observing the body for added nodes
+            observer.observe(document.body, { childList: true });
+        });
+    </script>
     <script src="composeApp.js"></script>
 </body>
 
