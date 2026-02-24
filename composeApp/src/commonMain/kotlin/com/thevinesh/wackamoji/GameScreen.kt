@@ -65,15 +65,6 @@ fun GameScreen(viewModel: GameViewModel = viewModel { GameViewModel() }) {
 
             Spacer(modifier = Modifier.height(32.dp))
         }
-
-        // Game Over overlay
-        if (state.gameOver) {
-            GameOverOverlay(
-                score = state.score,
-                level = state.level,
-                onRestart = { viewModel.onRestart() },
-            )
-        }
     }
 }
 
