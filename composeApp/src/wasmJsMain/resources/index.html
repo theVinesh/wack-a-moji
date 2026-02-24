@@ -147,37 +147,19 @@
         }
 
         // Loader dismissal logic
-        // Compose Multiplatform adds a canvas element when it starts up.
-        // We observe the DOM for this canvas to hide the loader.
-        document.addEventListener("DOMContentLoaded", () => {
-            const observer = new MutationObserver((mutations) => {
-                for (const mutation of mutations) {
-                    if (mutation.addedNodes.length) {
-                        for (let i = 0; i < mutation.addedNodes.length; i++) {
-                            const node = mutation.addedNodes[i];
-                            // Compose inserts a canvas element
-                            if (node.nodeName.toLowerCase() === 'canvas') {
-                                const loader = document.getElementById('loader-container');
-                                if (loader) {
-                                    // Let the first frame render before hiding
-                                    setTimeout(() => {
-                                        loader.style.opacity = '0';
-                                        setTimeout(() => {
-                                            loader.remove();
-                                        }, 500); // Wait for transition to finish
-                                    }, 100);
-                                    observer.disconnect();
-                                }
-                                return;
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Start observing the body for added nodes
-            observer.observe(document.body, { childList: true });
-        });
+        // Called from Kotlin/Wasm once the game is ready (fonts loaded)
+        window.onAppReady = function () {
+            const loader = document.getElementById('loader-container');
+            if (loader) {
+                // Let the first frame render before hiding
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        loader.remove();
+                    }, 500); // Wait for transition to finish
+                }, 100);
+            }
+        };
     </script>
     <script src="composeApp.js"></script>
 </body>

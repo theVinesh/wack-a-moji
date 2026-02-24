@@ -15,6 +15,13 @@ fun main() {
         val emojiFontFamily = FontFamily(Font(Res.font.NotoColorEmoji))
         CompositionLocalProvider(LocalEmojiFont provides emojiFontFamily) {
             App()
+            // Signal JS that fonts + UI are ready
+            androidx.compose.runtime.LaunchedEffect(Unit) { dismissLoader() }
         }
     }
 }
+
+// JS interop: call window.onAppReady() to dismiss the HTML loader
+@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
+@JsFun("() => { if (window.onAppReady) window.onAppReady(); }")
+external fun dismissLoader()

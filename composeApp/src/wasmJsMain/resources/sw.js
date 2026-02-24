@@ -1,4 +1,5 @@
 const CACHE_NAME = 'wackamoji-cache-v1';
+const FONT_CACHE_NAME = 'wackamoji-font-v1';
 
 // App shell resources to cache immediately on install
 const APP_SHELL = [
@@ -27,7 +28,8 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
+                    // Keep both the current app cache AND the dedicated font cache
+                    if (cacheName !== CACHE_NAME && cacheName !== FONT_CACHE_NAME) {
                         return caches.delete(cacheName);
                     }
                 })
@@ -60,9 +62,13 @@ self.addEventListener('fetch', (event) => {
                         // Clone the response because it's a one-time use stream
                         const responseToCache = response.clone();
 
-                        caches.open(CACHE_NAME)
+                        // Determine which cache to use
+                        const isFont = event.request.url.includes('NotoColorEmoji');
+                        const targetCacheName = isFont ? FONT_CACHE_NAME : CACHE_NAME;
+
+                        caches.open(targetCacheName)
                             .then((cache) => {
-                                // Cache any other resources fetched (like the NotoColorEmoji font)
+                                // Cache any other resources fetched
                                 // We only cache GET requests
                                 if (event.request.method === 'GET') {
                                     cache.put(event.request, responseToCache);
