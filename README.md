@@ -1,35 +1,53 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# WackAMoji 👾🔨
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+A fun, childish, "Whack-A-Mole" style game built entirely with Kotlin Multiplatform (KMP) and Compose Multiplatform. No external image assets are used—everything is drawn natively using Compose UI!
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+This project targets **Android** and **iOS**.
 
-### Build and Run Android Application
+## Features
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+- **Cross-Platform**: Playable on both Android and iOS with a single shared codebase.
+- **Modern Architecture**: Clean separation of game logic from UI for high testability.
+- **Theming**: Includes dynamic styling and design tokens.
 
-### Build and Run iOS Application
+## Project Structure
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+- [`/composeApp`](./composeApp/src) - Shared code across Compose Multiplatform applications.
+  - [`commonMain`](./composeApp/src/commonMain/kotlin) - The core game logic, UI components, and state management.
+  - [`androidMain`](./composeApp/src/androidMain/kotlin) - Android-specific entry point and actual implementations.
+  - [`iosMain`](./composeApp/src/iosMain/kotlin) - iOS-specific expected/actual implementations.
+- [`/iosApp`](./iosApp/iosApp) - The iOS Xcode project and SwiftUI host application.
 
----
+## Getting Started
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+### Prerequisites
+
+- Android Studio (latest stable or Ladybug+) / IntelliJ IDEA
+- Xcode (for iOS development)
+- JDK 17+
+
+### Build and Run Android
+
+To build and run the development version of the Android app, use the run widget in Android Studio or build from the terminal:
+
+```shell
+./gradlew :composeApp:assembleDebug
+```
+
+To install on a connected device/emulator:
+
+```shell
+./gradlew :composeApp:installDebug
+```
+
+### Build and Run iOS
+
+Open the [`/iosApp`](./iosApp) directory in Xcode and run it from there on a simulator or physical device.
+
+## Contributing
+
+When contributing to this project, please adhere to the guidelines outlined in [`AGENTS.md`](./AGENTS.md).
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

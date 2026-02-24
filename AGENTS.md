@@ -1,49 +1,54 @@
-# Repository Guidelines
+# Repository Guidelines: WackAMoji
+
+This document contains specific guidelines and context for AI agents and human contributors working on the **WackAMoji** project.
+
+## Project Context
+
+WackAMoji is a Kotlin Multiplatform (KMP) game targeting Android and iOS.
+**Key Technical & Design Constraints:**
+
+- **UI Architecture**: Game UI components (e.g., `CloudsBackground`, `ScoreDisplay`, `TimerSection`, `LevelIndicator`, `GameButtons`, `GameOverOverlay`) are extracted into separate files.
+- **Game Logic**: Pure game logic (state, scoring, timing) is separated from UI components.
 
 ## Project Structure & Module Organization
-- Kotlin Multiplatform with Compose: shared code in `composeApp/src/commonMain/kotlin`.
-- Android entrypoint and resources in `composeApp/src/androidMain` (e.g., `MainActivity.kt`, `AndroidManifest.xml`).
-- iOS entrypoint in `iosApp/iosApp` (SwiftUI host app). Open `iosApp/iosApp.xcodeproj` in Xcode.
-- Tests live in `composeApp/src/commonTest/kotlin`.
-- Build scripts: `build.gradle.kts`, `settings.gradle.kts`, module `composeApp/build.gradle.kts`.
+
+- **Shared Code**: `composeApp/src/commonMain/kotlin/com/thevinesh/wackamole`
+- **Android Entrypoint**: `composeApp/src/androidMain`
+- **iOS Entrypoint**: `iosApp/iosApp` (SwiftUI host app). Open `iosApp/iosApp.xcodeproj` in Xcode.
+- **Tests**: `composeApp/src/commonTest/kotlin`
 
 ## Build, Test & Run
-- Build all: `./gradlew build` — compiles all targets and runs checks.
-- Unit tests: `./gradlew test` or `./gradlew :composeApp:check` — runs common tests and verifications.
-- Android debug APK: `./gradlew :composeApp:assembleDebug`.
-- Install to device/emulator: `./gradlew :composeApp:installDebug` (requires an Android device/emulator).
+
+- Compile all targets: `./gradlew build`
+- Unit tests: `./gradlew test`
+- Android debug build: `./gradlew :composeApp:assembleDebug`
 - iOS app: open `iosApp/iosApp.xcodeproj` in Xcode and run on a simulator/device.
 
 ## Coding Style & Naming Conventions
-- Follow official Kotlin style (4‑space indent, max 100–120 cols, trailing commas allowed).
-- Packages: `com.thevinesh.wackamole.*`. Types: `PascalCase`; functions/vars: `camelCase`; constants: `UPPER_SNAKE_CASE`.
-- Android resources use lowercase underscore (e.g., `ic_launcher_background`).
-- Keep shared UI/state in `commonMain`; platform APIs in `androidMain`/`iosMain`.
+
+- Follow official Kotlin style (4‑space indent, max 100–120 cols).
+- Packages: `com.thevinesh.wackamole.*`.
+- Types: `PascalCase`; functions/vars: `camelCase`; constants: `UPPER_SNAKE_CASE`.
+- Keep shared UI/state in `commonMain`; platform-specific bridges in `androidMain`/`iosMain`.
 
 ### Compose Previews
-- Provide a `@Preview` for every new Composable you add (including screens, widgets, and reusable UI).
-- Keep previews minimal and deterministic (no network or timers). Use small, hard-coded sample data.
-- Place previews alongside the composable in the same file and mark them `private`.
+
+- Provide a `@Preview` for every new Composable added.
+- Previews should encompass all isolated UI components.
+- Keep previews deterministic (no timers/network). Use hard-coded sample data.
 
 ### Commit Messages
-- After finishing a task, provide a single, one-line Conventional Commit message in your handoff (e.g., `feat: add GameScreen with previews`).
-- Use imperative mood, present tense; keep it concise and scoped to the change.
+
+- Prefer Conventional Commits (e.g., `feat: update game loop logic`, `fix: isometric shadow clipping`).
+- Provide a single, one-line summary.
 
 ## Testing Guidelines
+
 - Framework: `kotlin.test` in `composeApp/src/commonTest`.
-- Name test classes with `...Test` and annotate methods with `@Test`.
-- Add tests for new logic in `commonMain` when feasible. Run via `./gradlew test`.
-
-## Commit & Pull Request Guidelines
-- Prefer Conventional Commits (e.g., `feat: add score tracking`, `fix: null state crash`).
-- Keep commits focused and descriptive; reference issues (`Closes #123`).
-- PRs should include: summary, rationale, screenshots (UI changes), test notes, and affected platforms (Android/iOS).
-
-## Security & Configuration Tips
-- Do not commit secrets/keys. Android signing configs and iOS provisioning should remain local.
-- iOS configuration lives under `iosApp/Configuration/*.xcconfig` — keep sensitive overrides out of VCS.
+- Ensure newly extracted game logic is accompanied by robust unit tests.
 
 ## Agent-Specific Notes
-- Do not move modules or restructure Gradle without discussion.
-- Place cross‑platform code in `commonMain`; use expect/actual if needed for platform bridges.
-- Avoid new dependencies unless justified in the PR description.
+
+- **UI Changes**: When altering the game UI, strictly adhere to the established beautiful, childish design language.
+- **Dependencies**: Avoid adding new dependencies unless absolutely necessary.
+- **Platform Bridging**: Place cross‑platform code in `commonMain`; use `expect/actual` if needed for platform bridges.
