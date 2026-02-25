@@ -229,9 +229,9 @@ class GameViewModelTest {
             cells = listOf(true, false, false, false, false, false, false, false, false)
         )
         
-        // Use the internal test constructor to inject the paused state
+        // Use the factory method to create ViewModel with test state
         // startGame = false prevents coroutines from starting
-        val vm = GameViewModel(testState = pausedState, startGame = false)
+        val vm = GameViewModel.createForTest(testState = pausedState, startGame = false)
         advanceUntilIdle()
         
         // Try to hit the mole while game is paused
@@ -253,9 +253,9 @@ class GameViewModelTest {
             cells = listOf(true, false, false, false, false, false, false, false, false)
         )
         
-        // Use the internal test constructor to inject the running state
+        // Use the factory method to create ViewModel with test state
         // startGame = false prevents coroutines from starting (we only test onMoleHit logic)
-        val vm = GameViewModel(testState = runningState, startGame = false)
+        val vm = GameViewModel.createForTest(testState = runningState, startGame = false)
         advanceUntilIdle()
         
         // Hit the mole while game is running
