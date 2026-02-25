@@ -67,21 +67,42 @@ data class GameUiState(
 
 class GameViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GameUiState())
-    val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
+    private val _uiState: MutableStateFlow<GameUiState>
+    val uiState: StateFlow<GameUiState>
 
     private var timerJob: Job? = null
     private var spawnJob: Job? = null
 
-    init {
+    /**
+     * Default constructor for production use.
+     * Initializes the game with default state and starts game loops.
+     */
+    constructor() {
+        _uiState = MutableStateFlow(GameUiState())
+        uiState = _uiState.asStateFlow()
         startGameLoops()
+    }
+
+    /**
+     * Internal constructor for testing purposes only.
+     * Allows injecting a custom initial state and optionally disabling game loop auto-start.
+     *
+     * @param initialState The initial game state to use
+     * @param startGame Whether to start the game loops automatically (default: false)
+     */
+    internal constructor(initialState: GameUiState, startGame: Boolean = false) {
+        _uiState = MutableStateFlow(initialState)
+        uiState = _uiState.asStateFlow()
+        if (startGame) {
+            startGameLoops()
+        }
     }
 
     // ── Actions ──────────────────────────────────────────────────────────────
 
     fun onMoleHit(index: Int) {
         _uiState.update { state ->
-            if (!state.cells[index] || state.gameOver) return@update state
+            if (!state.cells[index] || state.gameOver || !state.running) return@update state
             state.copy(
                 score = state.score + 1,
                 cells = state.cells.toMutableList().also { it[index] = false },
