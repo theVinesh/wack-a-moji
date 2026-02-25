@@ -65,7 +65,7 @@ data class GameUiState(
 
 // ─── ViewModel ───────────────────────────────────────────────────────────────
 
-class GameViewModel : ViewModel() {
+class GameViewModel : ViewModel {
 
     private val _uiState: MutableStateFlow<GameUiState>
     val uiState: StateFlow<GameUiState>
@@ -77,7 +77,7 @@ class GameViewModel : ViewModel() {
      * Default constructor for production use.
      * Initializes the game with default state and starts game loops.
      */
-    constructor() {
+    constructor() : super() {
         _uiState = MutableStateFlow(GameUiState())
         uiState = _uiState.asStateFlow()
         startGameLoops()
@@ -90,7 +90,7 @@ class GameViewModel : ViewModel() {
      * @param testState The initial game state to use (required parameter)
      * @param startGame Whether to start the game loops automatically (default: false)
      */
-    internal constructor(testState: GameUiState, startGame: Boolean = false) {
+    internal constructor(testState: GameUiState, startGame: Boolean = false) : super() {
         _uiState = MutableStateFlow(testState)
         uiState = _uiState.asStateFlow()
         if (startGame) {
