@@ -81,7 +81,7 @@ class GameViewModel : ViewModel() {
 
     fun onMoleHit(index: Int) {
         _uiState.update { state ->
-            if (!state.cells[index] || state.gameOver) return@update state
+            if (!state.cells[index] || state.gameOver || !state.running) return@update state
             state.copy(
                 score = state.score + 1,
                 cells = state.cells.toMutableList().also { it[index] = false },

@@ -202,4 +202,49 @@ class GameViewModelTest {
         vm.onMoleHit(0)
         assertEquals(0, vm.uiState.value.score)
     }
+
+    @Test
+    fun onMoleHit_doesNotScoreWhenGameIsPaused() {
+        val vm = GameViewModel()
+        
+        // Pause the game
+        vm.onPauseResume()
+        assertFalse(vm.uiState.value.running)
+        
+        // Manually set up a mole to be hit (simulate a mole that's up)
+        val initialScore = vm.uiState.value.score
+        vm.uiState.update { state ->
+            state.copy(cells = state.cells.toMutableList().apply { this[0] = true })
+        }
+        
+        // Try to hit the mole while game is paused
+        vm.onMoleHit(0)
+        
+        // Score should not change
+        assertEquals(initialScore, vm.uiState.value.score)
+        // The mole should still be up (since scoring didn't happen)
+        assertTrue(vm.uiState.value.cells[0])
+    }
+
+    @Test
+    fun onMoleHit_scoresWhenGameIsRunning() {
+        val vm = GameViewModel()
+        
+        // Ensure game is running
+        assertTrue(vm.uiState.value.running)
+        
+        // Manually set up a mole to be hit
+        val initialScore = vm.uiState.value.score
+        vm.uiState.update { state ->
+            state.copy(cells = state.cells.toMutableList().apply { this[0] = true })
+        }
+        
+        // Hit the mole while game is running
+        vm.onMoleHit(0)
+        
+        // Score should increase
+        assertEquals(initialScore + 1, vm.uiState.value.score)
+        // The mole should be down
+        assertFalse(vm.uiState.value.cells[0])
+    }
 }
