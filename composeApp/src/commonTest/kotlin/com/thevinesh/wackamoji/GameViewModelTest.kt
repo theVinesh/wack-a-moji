@@ -212,7 +212,7 @@ class GameViewModelTest {
         )
         
         // Use the internal test constructor to inject the paused state
-        val vm = GameViewModel(initialState = pausedState, startGame = false)
+        val vm = GameViewModel(testState = pausedState, startGame = false)
         
         // Try to hit the mole while game is paused
         val initialScore = pausedState.score
@@ -233,7 +233,7 @@ class GameViewModelTest {
         )
         
         // Use the internal test constructor to inject the running state
-        val vm = GameViewModel(initialState = runningState, startGame = false)
+        val vm = GameViewModel(testState = runningState, startGame = false)
         
         // Hit the mole while game is running
         val initialScore = runningState.score
