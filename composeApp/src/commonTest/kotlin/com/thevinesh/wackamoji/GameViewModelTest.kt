@@ -156,7 +156,7 @@ class GameViewModelTest {
     // ─── GameViewModel initial state ─────────────────────────────────────────
 
     @Test
-    fun viewModel_initialStateIsDefault() = runTest {
+    fun viewModel_initialStateIsDefault() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
         // Allow coroutines to initialize
         advanceUntilIdle()
@@ -171,7 +171,7 @@ class GameViewModelTest {
     // ─── GameViewModel.onPauseResume ─────────────────────────────────────────
 
     @Test
-    fun onPauseResume_togglesRunning() = runTest {
+    fun onPauseResume_togglesRunning() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
         advanceUntilIdle()
         
@@ -189,7 +189,7 @@ class GameViewModelTest {
     // ─── GameViewModel.onRestart ─────────────────────────────────────────────
 
     @Test
-    fun onRestart_afterPause_resetsState() = runTest {
+    fun onRestart_afterPause_resetsState() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
         advanceUntilIdle()
         
@@ -210,7 +210,7 @@ class GameViewModelTest {
     // ─── GameViewModel.onMoleHit ─────────────────────────────────────────────
 
     @Test
-    fun onMoleHit_doesNothingWhenNoCellIsUp() = runTest {
+    fun onMoleHit_doesNothingWhenNoCellIsUp() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
         advanceUntilIdle()
         
@@ -222,7 +222,7 @@ class GameViewModelTest {
     }
 
     @Test
-    fun onMoleHit_doesNotScoreWhenGameIsPaused() = runTest {
+    fun onMoleHit_doesNotScoreWhenGameIsPaused() = runTest(testDispatcher.scheduler) {
         // Create a paused game state with a mole up at index 0
         val pausedState = GameUiState(
             running = false,
@@ -246,7 +246,7 @@ class GameViewModelTest {
     }
 
     @Test
-    fun onMoleHit_scoresWhenGameIsRunning() = runTest {
+    fun onMoleHit_scoresWhenGameIsRunning() = runTest(testDispatcher.scheduler) {
         // Create a running game state with a mole up at index 0
         val runningState = GameUiState(
             running = true,
