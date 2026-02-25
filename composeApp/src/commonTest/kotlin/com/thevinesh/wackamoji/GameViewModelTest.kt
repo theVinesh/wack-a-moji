@@ -205,19 +205,21 @@ class GameViewModelTest {
 
     @Test
     fun onMoleHit_doesNotScoreWhenGameIsPaused() {
+        // Create a paused game state manually
+        val pausedState = GameUiState(
+            running = false,
+            cells = listOf(true, false, false, false, false, false, false, false, false)
+        )
+        
         val vm = GameViewModel()
         
-        // Pause the game
-        vm.onPauseResume()
-        assertFalse(vm.uiState.value.running)
-        
-        // Manually set up a mole to be hit (simulate a mole that's up)
-        val initialScore = vm.uiState.value.score
-        vm.uiState.update { state ->
-            state.copy(cells = state.cells.toMutableList().apply { this[0] = true })
-        }
+        // Override the state to be paused with a mole up
+        val privateStateField = vm::class.java.getDeclaredField("_uiState")
+        privateStateField.isAccessible = true
+        privateStateField.set(vm, MutableStateFlow(pausedState))
         
         // Try to hit the mole while game is paused
+        val initialScore = pausedState.score
         vm.onMoleHit(0)
         
         // Score should not change
@@ -228,18 +230,21 @@ class GameViewModelTest {
 
     @Test
     fun onMoleHit_scoresWhenGameIsRunning() {
+        // Create a running game state manually with a mole up
+        val runningState = GameUiState(
+            running = true,
+            cells = listOf(true, false, false, false, false, false, false, false, false)
+        )
+        
         val vm = GameViewModel()
         
-        // Ensure game is running
-        assertTrue(vm.uiState.value.running)
-        
-        // Manually set up a mole to be hit
-        val initialScore = vm.uiState.value.score
-        vm.uiState.update { state ->
-            state.copy(cells = state.cells.toMutableList().apply { this[0] = true })
-        }
+        // Override the state to be running with a mole up
+        val privateStateField = vm::class.java.getDeclaredField("_uiState")
+        privateStateField.isAccessible = true
+        privateStateField.set(vm, MutableStateFlow(runningState))
         
         // Hit the mole while game is running
+        val initialScore = runningState.score
         vm.onMoleHit(0)
         
         // Score should increase
