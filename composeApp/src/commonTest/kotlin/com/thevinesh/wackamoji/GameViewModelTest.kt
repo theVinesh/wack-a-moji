@@ -202,4 +202,46 @@ class GameViewModelTest {
         vm.onMoleHit(0)
         assertEquals(0, vm.uiState.value.score)
     }
+
+    @Test
+    fun onMoleHit_doesNotScoreWhenGameIsPaused() {
+        // Create a paused game state with a mole up at index 0
+        val pausedState = GameUiState(
+            running = false,
+            cells = listOf(true, false, false, false, false, false, false, false, false)
+        )
+        
+        // Use the internal test constructor to inject the paused state
+        val vm = GameViewModel(initialState = pausedState, startGame = false)
+        
+        // Try to hit the mole while game is paused
+        val initialScore = pausedState.score
+        vm.onMoleHit(0)
+        
+        // Score should not change when game is paused
+        assertEquals(initialScore, vm.uiState.value.score)
+        // The mole should still be up (since scoring didn't happen)
+        assertTrue(vm.uiState.value.cells[0])
+    }
+
+    @Test
+    fun onMoleHit_scoresWhenGameIsRunning() {
+        // Create a running game state with a mole up at index 0
+        val runningState = GameUiState(
+            running = true,
+            cells = listOf(true, false, false, false, false, false, false, false, false)
+        )
+        
+        // Use the internal test constructor to inject the running state
+        val vm = GameViewModel(initialState = runningState, startGame = false)
+        
+        // Hit the mole while game is running
+        val initialScore = runningState.score
+        vm.onMoleHit(0)
+        
+        // Score should increase when game is running
+        assertEquals(initialScore + 1, vm.uiState.value.score)
+        // The mole should be down after being hit
+        assertFalse(vm.uiState.value.cells[0])
+    }
 }
