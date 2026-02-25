@@ -87,11 +87,11 @@ class GameViewModel : ViewModel() {
      * Internal constructor for testing purposes only.
      * Allows injecting a custom initial state and optionally disabling game loop auto-start.
      *
-     * @param initialState The initial game state to use
+     * @param testState The initial game state to use (required parameter)
      * @param startGame Whether to start the game loops automatically (default: false)
      */
-    internal constructor(initialState: GameUiState, startGame: Boolean = false) {
-        _uiState = MutableStateFlow(initialState)
+    internal constructor(testState: GameUiState, startGame: Boolean = false) {
+        _uiState = MutableStateFlow(testState)
         uiState = _uiState.asStateFlow()
         if (startGame) {
             startGameLoops()
