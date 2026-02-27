@@ -52,3 +52,28 @@ WackAMoji is a Kotlin Multiplatform (KMP) game targeting Android and iOS.
 - **UI Changes**: When altering the game UI, strictly adhere to the established beautiful, childish design language.
 - **Dependencies**: Avoid adding new dependencies unless absolutely necessary.
 - **Platform Bridging**: Place cross‑platform code in `commonMain`; use `expect/actual` if needed for platform bridges.
+
+## Cursor Cloud specific instructions
+
+### Environment
+
+- **JDK 21** is pre-installed at `/usr/lib/jvm/java-21-openjdk-amd64`. `JAVA_HOME` and `ANDROID_HOME` are configured in `~/.bashrc`.
+- **Android SDK** (platform 36, build-tools 36) is installed at `~/android-sdk`. The file `local.properties` (gitignored) points `sdk.dir` to this path.
+- **Gradle 8.14.3** is auto-downloaded by the wrapper (`./gradlew`). No manual Gradle install needed.
+- **No Docker or external services** are required; the project is fully self-contained.
+
+### Running the app (WasmJS browser target)
+
+On this Linux VM there is no Android emulator or Xcode. To test the app interactively, use the **WasmJS browser target**:
+
+1. Build: `./gradlew :composeApp:wasmJsBrowserDistribution`
+2. Serve: `python3 -m http.server 8080` from `composeApp/build/dist/wasmJs/productionExecutable/`
+3. Open `http://localhost:8080` in Chrome.
+
+Alternatively, `./gradlew :composeApp:wasmJsBrowserDevelopmentRun` starts a Webpack dev server with hot-reload (runs on port 8080).
+
+### Gotchas
+
+- The first `./gradlew build` downloads Gradle, Kotlin compiler, and all dependencies — allow ~5-7 minutes.
+- iOS targets (`linkDebugFrameworkIos*`) are always SKIPPED on Linux (no Xcode toolchain). This is expected.
+- Lint reports are written to `composeApp/build/reports/lint-results-debug.html`.
