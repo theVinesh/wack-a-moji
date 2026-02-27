@@ -32,6 +32,7 @@ jobs:
     name: Build Android App
     needs: test
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
@@ -54,6 +55,7 @@ jobs:
     name: Build iOS App
     needs: test
     runs-on: macos-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
@@ -77,6 +79,7 @@ jobs:
     name: Build WebAssembly App
     needs: test
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write
