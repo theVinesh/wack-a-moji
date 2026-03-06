@@ -208,6 +208,7 @@ jobs:
         env:
           ANDROID_PLAY_CONFIG_JSON_PATH: ${{ github.workspace }}/composeApp/play_config.json
           ANDROID_PLAY_TRACK: internal
+          ANDROID_PLAY_RELEASE_STATUS: draft
           ANDROID_AAB_PATH: ${{ github.workspace }}/composeApp/build/outputs/bundle/release/composeApp-release.aab
 
   deploy-ios:

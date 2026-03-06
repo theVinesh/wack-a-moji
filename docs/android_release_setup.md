@@ -2,6 +2,8 @@
 
 Android publishing is wired for a zero-effort normal flow: once the Play Console setup and GitHub secrets below are in place, a push to `main` builds the signed release bundle and uploads it to the Google Play **internal** track automatically.
 
+The current workflow sets the Play upload `release_status` to `draft`. This is required while the Play Console app is still in its draft state because Google rejects the default completed-release behavior for draft apps. After the first Play release is fully set up and the app is no longer draft-only, you can switch `ANDROID_PLAY_RELEASE_STATUS` in `.github/workflows/build-and-test.yml` to `completed` (or another supported Play release status) if you want automation to publish beyond draft.
+
 ## Required GitHub repository secrets
 
 - `KEYSTORE_FILE_BASE64`: Base64-encoded Android upload keystore file. Source of truth: the `.jks`/`.keystore` file you choose for Play uploads. Preparation: encode the binary file as a **single line** before pasting it into GitHub (for example, on macOS: `base64 -i path/to/release.jks | tr -d '\n'`). The workflow decodes this secret into `composeApp/release.jks`.
@@ -39,8 +41,8 @@ Android publishing is wired for a zero-effort normal flow: once the Play Console
 1. Update app code and store metadata as needed.
 2. Commit any new Android screenshots to `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`.
 3. Merge or push to `main`.
-4. GitHub Actions runs `deploy-android`, decodes the keystore/service-account key, builds the release AAB, syncs metadata from `store_metadata/`, and uploads to the Play internal track.
+4. GitHub Actions runs `deploy-android`, decodes the keystore/service-account key, builds the release AAB, syncs metadata from `store_metadata/`, and uploads to the Play internal track as a draft release.
 
 ## Remaining manual steps
 
-Only external Play Console actions remain manual, such as first-time app/account setup, completing Play Console forms/content declarations, or promoting releases beyond the internal track.
+Only external Play Console actions remain manual, such as first-time app/account setup, completing Play Console forms/content declarations, sending the initial draft release through Play Console review/publish steps, or promoting releases beyond the internal track.
