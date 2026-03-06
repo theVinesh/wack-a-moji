@@ -13,6 +13,7 @@ platform :android do
 
     # Build the AAB
     gradle(
+      gradle_path: File.expand_path("../../gradlew", __dir__),
       task: "bundle",
       build_type: "Release",
       properties: {
