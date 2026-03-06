@@ -58,8 +58,31 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Validate Android release signing inputs
+        env:
+          KEYSTORE_FILE_BASE64: ${{ secrets.KEYSTORE_FILE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          for var in KEYSTORE_FILE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!var}" ]; then
+              echo "::error::$var is required for a release-signed Android AAB"
+              exit 1
+            fi
+          done
+
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_FILE_BASE64 }}" | base64 --decode > "${{ github.workspace }}/composeApp/release.jks"
+
       - name: Build Android release AAB
         run: ./gradlew :composeApp:bundleRelease
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          ANDROID_RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/composeApp/release.jks
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload Android release AAB artifact
         uses: actions/upload-artifact@v4
@@ -88,15 +111,30 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler: default
+          bundler-cache: true
+
       - name: Build iOS App
         working-directory: iosApp
-        run: xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Release -sdk iphonesimulator -destination "generic/platform=iOS Simulator" -derivedDataPath build/ci-derived-data build
+        run: bundle exec fastlane ios build_release_artifact
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
 
       - name: Upload iOS Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ios-simulator-app
-          path: iosApp/build/ci-derived-data/Build/Products/Release-iphonesimulator/Wack-A-Moji.app
+          name: wack-a-moji-ios-release-ipa
+          path: iosApp/build/ci-release/Wack-A-Moji.ipa
           if-no-files-found: error
 
   build-wasm:
@@ -165,23 +203,22 @@ jobs:
           bundler: default
           bundler-cache: true
 
-      - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_FILE_BASE64 }}" | base64 --decode > "${{ github.workspace }}/composeApp/release.jks"
-
       - name: Create Google Play Service Account Key
         run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > "${{ github.workspace }}/composeApp/play_config.json"
+
+      - name: Download Android release AAB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wack-a-moji-android-release-aab
+          path: composeApp/build/outputs/bundle/release
 
       - name: Deploy with Fastlane
         working-directory: composeApp
         run: bundle exec fastlane android deploy
         env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
           ANDROID_PLAY_CONFIG_JSON_PATH: ${{ github.workspace }}/composeApp/play_config.json
           ANDROID_PLAY_TRACK: internal
-          ANDROID_RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/composeApp/release.jks
-          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ANDROID_AAB_PATH: ${{ github.workspace }}/composeApp/build/outputs/bundle/release/composeApp-release.aab
 
   deploy-ios:
     name: Deploy iOS to TestFlight
@@ -206,15 +243,18 @@ jobs:
           bundler: default
           bundler-cache: true
 
-      - name: Deploy or report missing Apple prerequisites
+      - name: Download iOS release IPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wack-a-moji-ios-release-ipa
+          path: iosApp/build/ci-release
+
+      - name: Deploy prebuilt iOS artifact
         working-directory: iosApp
         run: bundle exec fastlane ios deploy
         env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+          IOS_IPA_PATH: ${{ github.workspace }}/iosApp/build/ci-release/Wack-A-Moji.ipa
 
