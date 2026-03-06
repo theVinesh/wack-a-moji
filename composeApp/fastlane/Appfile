@@ -1,0 +1,2 @@
+json_key_file(ENV["PLAY_STORE_CONFIG_JSON"]) # Path to the json secret file
+package_name("com.thevinesh.wackamoji")

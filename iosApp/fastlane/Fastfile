@@ -1,0 +1,36 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Capture screenshots and deploy to TestFlight"
+  lane :deploy do
+    # 1. Sync shared metadata to fastlane folder
+    sync_metadata
+
+    # 2. Capture screenshots (Optional: Requires snapshot setup)
+    # snapshot
+
+    # 3. Build & increment build number
+    increment_build_number(build_number: ENV["GITHUB_RUN_NUMBER"] || "1")
+    build_app(scheme: "iosApp")
+
+    # 4. Upload to TestFlight (Requires paid account + API Key)
+    # upload_to_testflight(
+    #   api_key_path: "path/to/api_key.json"
+    # )
+  end
+
+  desc "Sync shared metadata to fastlane folder"
+  lane :sync_metadata do
+    shared_path = "../../store_metadata"
+    dest_path = "./metadata/en-US"
+    sh "mkdir -p #{dest_path}"
+    sh "cp #{shared_path}/en-US/name.txt #{dest_path}/name.txt"
+    sh "cp #{shared_path}/en-US/short_description.txt #{dest_path}/subtitle.txt"
+    sh "cp #{shared_path}/en-US/description.txt #{dest_path}/description.txt"
+    sh "cp #{shared_path}/en-US/keywords.txt #{dest_path}/keywords.txt"
+    
+    # Copy icon for App Store Connect metadata (if needed by deliver)
+    # deliver uses it for the store page
+    # sh "cp #{shared_path}/assets/icon_1024.png ./metadata/app_icon.png"
+  end
+end

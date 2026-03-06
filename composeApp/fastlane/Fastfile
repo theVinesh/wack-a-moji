@@ -1,0 +1,43 @@
+default_platform(:android)
+
+platform :android do
+  desc "Capture screenshots and deploy to Google Play"
+  lane :deploy do
+    # Capture screenshots (Optional: Requires Screengrab setup)
+    # capture_android_screenshots
+
+    # Build the AAB
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      properties: {
+        "android.injected.version.code" => ENV["GITHUB_RUN_NUMBER"] || "1",
+        "android.injected.version.name" => "1.0.#{ENV['GITHUB_RUN_NUMBER'] || '0'}"
+      }
+    )
+
+    # Sync Metadata
+    metadata_dir = "../../store_metadata/en-US"
+    upload_to_play_store(
+      track: "internal", # Default to internal, can change to production
+      skip_upload_apk: true,
+      aab: "composeApp/build/outputs/bundle/release/composeApp-release.aab",
+      metadata_path: "./fastlane/metadata/android", # We will symlink or copy here
+      # Or use manual fields
+    )
+  end
+
+  desc "Sync shared metadata to fastlane folder"
+  lane :sync_metadata do
+    shared_path = "../../store_metadata"
+    dest_path = "./metadata/android/en-US"
+    sh "mkdir -p #{dest_path}"
+    sh "cp #{shared_path}/en-US/name.txt #{dest_path}/title.txt"
+    sh "cp #{shared_path}/en-US/short_description.txt #{dest_path}/short_description.txt"
+    sh "cp #{shared_path}/en-US/description.txt #{dest_path}/full_description.txt"
+    # Copy assets
+    sh "mkdir -p ./metadata/android/en-US/images"
+    sh "cp #{shared_path}/assets/feature_graphic.png ./metadata/android/en-US/images/featureGraphic.png"
+    sh "cp #{shared_path}/assets/icon_512.png ./metadata/android/en-US/images/icon.png"
+  end
+end

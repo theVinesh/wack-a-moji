@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		C1C293A92F51E6E000827C3C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6E45EFA5F6B48221AA6726F5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E8ADC2E84F17A770B53B44A2;
+			remoteInfo = iosApp;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		A03948BC3E76F6DCCF1CE9A1 /* WackAMole.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WackAMole.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A03948BC3E76F6DCCF1CE9A1 /* Wack-A-Moji.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Wack-A-Moji.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1C293A32F51E6E000827C3C /* iosAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -24,6 +35,11 @@
 		74C791AA62413B6E9BED8A35 /* Configuration */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Configuration;
+			sourceTree = "<group>";
+		};
+		C1C293A42F51E6E000827C3C /* iosAppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = iosAppUITests;
 			sourceTree = "<group>";
 		};
 		F8C8D479199BFE4CE0C39E17 /* iosApp */ = {
@@ -44,6 +60,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1C293A02F51E6E000827C3C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -52,6 +75,7 @@
 			children = (
 				74C791AA62413B6E9BED8A35 /* Configuration */,
 				F8C8D479199BFE4CE0C39E17 /* iosApp */,
+				C1C293A42F51E6E000827C3C /* iosAppUITests */,
 				B5635383912E288096FF9BB4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -59,7 +83,8 @@
 		B5635383912E288096FF9BB4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A03948BC3E76F6DCCF1CE9A1 /* WackAMole.app */,
+				A03948BC3E76F6DCCF1CE9A1 /* Wack-A-Moji.app */,
+				C1C293A32F51E6E000827C3C /* iosAppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -67,6 +92,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		C1C293A22F51E6E000827C3C /* iosAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1C293AD2F51E6E000827C3C /* Build configuration list for PBXNativeTarget "iosAppUITests" */;
+			buildPhases = (
+				C1C2939F2F51E6E000827C3C /* Sources */,
+				C1C293A02F51E6E000827C3C /* Frameworks */,
+				C1C293A12F51E6E000827C3C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C1C293AA2F51E6E000827C3C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C1C293A42F51E6E000827C3C /* iosAppUITests */,
+			);
+			name = iosAppUITests;
+			packageProductDependencies = (
+			);
+			productName = iosAppUITests;
+			productReference = C1C293A32F51E6E000827C3C /* iosAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		E8ADC2E84F17A770B53B44A2 /* iosApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 18BC9B64822B55EF467FB4EE /* Build configuration list for PBXNativeTarget "iosApp" */;
@@ -87,7 +135,7 @@
 			packageProductDependencies = (
 			);
 			productName = iosApp;
-			productReference = A03948BC3E76F6DCCF1CE9A1 /* WackAMole.app */;
+			productReference = A03948BC3E76F6DCCF1CE9A1 /* Wack-A-Moji.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -97,9 +145,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
+				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
+					C1C293A22F51E6E000827C3C = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = E8ADC2E84F17A770B53B44A2;
+					};
 					E8ADC2E84F17A770B53B44A2 = {
 						CreatedOnToolsVersion = 16.2;
 					};
@@ -120,11 +172,19 @@
 			projectRoot = "";
 			targets = (
 				E8ADC2E84F17A770B53B44A2 /* iosApp */,
+				C1C293A22F51E6E000827C3C /* iosAppUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		C1C293A12F51E6E000827C3C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EB7B5A9CEA52BD064A6F2F46 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -157,6 +217,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		C1C2939F2F51E6E000827C3C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D8C128B6B518C99FF4FB2E09 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -165,6 +232,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C1C293AA2F51E6E000827C3C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E8ADC2E84F17A770B53B44A2 /* iosApp */;
+			targetProxy = C1C293A92F51E6E000827C3C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3F0F9415E3D5E85893D7A398 /* Debug */ = {
@@ -323,6 +398,50 @@
 			};
 			name = Debug;
 		};
+		C1C293AB2F51E6E000827C3C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9S95C26JN6;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thevinesh.wackamoji.iosAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iosApp;
+			};
+			name = Debug;
+		};
+		C1C293AC2F51E6E000827C3C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9S95C26JN6;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thevinesh.wackamoji.iosAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iosApp;
+			};
+			name = Release;
+		};
 		ECD9E5C016BF4F1E816715CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -373,6 +492,15 @@
 			buildConfigurations = (
 				3F0F9415E3D5E85893D7A398 /* Debug */,
 				6FFB843A2DF4D14A4CC383DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C1C293AD2F51E6E000827C3C /* Build configuration list for PBXNativeTarget "iosAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1C293AB2F51E6E000827C3C /* Debug */,
+				C1C293AC2F51E6E000827C3C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
