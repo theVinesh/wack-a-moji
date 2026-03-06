@@ -73,7 +73,14 @@ jobs:
 
       - name: Build iOS App
         working-directory: iosApp
-        run: xcodebuild -project iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -destination "generic/platform=iOS Simulator" build
+        run: xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk iphonesimulator -destination "generic/platform=iOS Simulator" -derivedDataPath build/ci-derived-data build
+
+      - name: Upload iOS Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-app
+          path: iosApp/build/ci-derived-data/Build/Products/Debug-iphonesimulator/Wack-A-Moji.app
+          if-no-files-found: error
 
   build-wasm:
     name: Build WebAssembly App
