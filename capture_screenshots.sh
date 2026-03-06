@@ -4,8 +4,10 @@
 
 echo "📸 Starting manual screenshot capture process..."
 
-# Define the paths to the metadata folders where we will copy the screenshots
-SHARED_ASSETS_DIR="store_metadata/assets/screenshots"
+# Define the shared screenshot paths used by the store pipelines
+SHARED_SCREENSHOTS_DIR="store_metadata/assets/screenshots"
+ANDROID_SHARED_ASSETS_DIR="$SHARED_SCREENSHOTS_DIR/android/en-US/phoneScreenshots"
+IOS_SHARED_ASSETS_DIR="$SHARED_SCREENSHOTS_DIR/ios/en-US"
 ANDROID_DIR="composeApp"
 IOS_DIR="iosApp"
 
@@ -63,8 +65,8 @@ devices([
 languages([
   "en-US"
 ])
-scheme("iosApp")
-output_directory("./fastlane/screenshots")
+scheme("iosAppUITests")
+output_directory("./screenshots")
 clear_previous_screenshots(true)
 EOF
     fi
@@ -88,20 +90,22 @@ else
 fi
 
 # 3. Synchronize Screenshots to the Shared Directory
-echo "🔄 Copying generated screenshots to shared assets directory ($SHARED_ASSETS_DIR)..."
-mkdir -p "$SHARED_ASSETS_DIR"
+echo "🔄 Copying generated screenshots into shared store metadata ($SHARED_SCREENSHOTS_DIR)..."
+mkdir -p "$ANDROID_SHARED_ASSETS_DIR" "$IOS_SHARED_ASSETS_DIR"
 
 # Copy Android screenshots
 if [ -d "$ANDROID_DIR/fastlane/metadata/android/en-US/images/phoneScreenshots" ]; then
-    cp $ANDROID_DIR/fastlane/metadata/android/en-US/images/phoneScreenshots/*.png "$SHARED_ASSETS_DIR/" 2>/dev/null
-    echo "Copied Android screenshots."
+    rm -f "$ANDROID_SHARED_ASSETS_DIR"/*.png
+    cp "$ANDROID_DIR"/fastlane/metadata/android/en-US/images/phoneScreenshots/*.png "$ANDROID_SHARED_ASSETS_DIR/" 2>/dev/null
+    echo "Copied Android screenshots to $ANDROID_SHARED_ASSETS_DIR."
 fi
 
 # Copy iOS screenshots
 if [ -d "$IOS_DIR/fastlane/screenshots/en-US" ]; then
-    cp $IOS_DIR/fastlane/screenshots/en-US/*.png "$SHARED_ASSETS_DIR/" 2>/dev/null
-    echo "Copied iOS screenshots."
+    rm -f "$IOS_SHARED_ASSETS_DIR"/*.png
+    cp "$IOS_DIR"/fastlane/screenshots/en-US/*.png "$IOS_SHARED_ASSETS_DIR/" 2>/dev/null
+    echo "Copied iOS screenshots to $IOS_SHARED_ASSETS_DIR."
 fi
 
-echo "🎉 Screenshot capture process complete! Please verify the images in $SHARED_ASSETS_DIR."
-echo "You can now commit these images to the repository to be used in the next automated deployment."
+echo "🎉 Screenshot capture process complete! Please verify the platform-specific images under $SHARED_SCREENSHOTS_DIR."
+echo "You can now commit these images to the repository to be used by the next Android publish and staged for the iOS App Store listing flow."

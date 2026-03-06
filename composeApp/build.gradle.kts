@@ -1,6 +1,20 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+private val githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+private val androidReleaseSigningEnvVars = listOf(
+    "ANDROID_RELEASE_KEYSTORE_PATH",
+    "ANDROID_RELEASE_KEYSTORE_PASSWORD",
+    "ANDROID_RELEASE_KEY_ALIAS",
+    "ANDROID_RELEASE_KEY_PASSWORD"
+)
+private val hasAndroidReleaseSigning = androidReleaseSigningEnvVars.all { !System.getenv(it).isNullOrBlank() }
+private val hasAnyAndroidReleaseSigning = androidReleaseSigningEnvVars.any { !System.getenv(it).isNullOrBlank() }
+
+check(!hasAnyAndroidReleaseSigning || hasAndroidReleaseSigning) {
+    "Set all Android release signing env vars or none of them: ${androidReleaseSigningEnvVars.joinToString()}"
+}
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -68,24 +82,30 @@ android {
         applicationId = "com.thevinesh.wackamoji"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        
-        versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
-        versionName = "1.0.${System.getenv("GITHUB_RUN_NUMBER") ?: "0"}"
+
+        versionCode = githubRunNumber
+        versionName = "1.0.$githubRunNumber"
     }
-    
+
     signingConfigs {
-        create("release") {
-            storeFile = file(System.getenv("RELEASE_KEYSTORE_PATH") ?: "debug.keystore")
-            storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
-            keyAlias = System.getenv("RELEASE_KEY_ALIAS")
-            keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+        if (hasAndroidReleaseSigning) {
+            create("release") {
+                storeFile = file(System.getenv("ANDROID_RELEASE_KEYSTORE_PATH")!!)
+                storePassword = System.getenv("ANDROID_RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_RELEASE_KEY_PASSWORD")
+            }
         }
     }
-    
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (hasAndroidReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 

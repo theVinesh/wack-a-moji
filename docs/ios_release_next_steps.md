@@ -1,42 +1,40 @@
-# iOS Release Automation Next Steps
+# iOS Release Automation Status
 
-Because the Apple Developer Program fee has not yet been paid, we cannot fully automate the iOS store submission (Fastlane requires access to App Store Connect to generate distribution certificates, provisioning profiles, and API access).
+The repo-side iOS release wiring is complete. Pushes to `main` already run `bundle exec fastlane ios deploy` from GitHub Actions.
 
-Once you pay the fee, follow these steps to finish setting up the automated pipeline for the iOS build:
+Until the Apple Developer Program membership is active and the required Apple credentials exist, the lane exits early with an explicit message instead of failing or requiring more repo edits.
 
-### 1. Register App ID in App Store Connect
+## Remaining external Apple-only blockers
 
-Log in to your Apple Developer account and create an App ID for your application. Make sure the Bundle Identifier matches what is in your Xcode project.
+1. Pay/activate the Apple Developer Program membership.
+2. Create the App Store Connect app record for bundle identifier `com.thevinesh.wackamoji`.
+3. Generate an App Store Connect API key with permission to manage builds.
+4. Initialize `fastlane match` storage and create the App Store distribution certificate + provisioning profile.
 
-### 2. Set up App Store Connect API Key
+## Required GitHub repository secrets
 
-Fastlane needs an API key to communicate with Apple's servers securely without 2FA prompts:
+Add these secrets once the Apple account prerequisites above are complete:
 
-1. Go to App Store Connect -> Users and Access -> Keys.
-2. Generate a new API Key with "App Manager" permissions.
-3. Download the `.p8` key file.
-4. Record the **Issuer ID** and **Key ID**.
+- `MATCH_GIT_URL`: Private Git URL (or other supported `match` storage URL) that stores signing assets.
+- `MATCH_PASSWORD`: Encryption password used by `fastlane match`.
+- `MATCH_GIT_BASIC_AUTHORIZATION` *(optional)*: Base64-encoded `username:token` for private Git access if `MATCH_GIT_URL` needs authentication.
+- `APP_STORE_CONNECT_API_KEY_KEY_ID`: App Store Connect API key ID.
+- `APP_STORE_CONNECT_API_KEY_ISSUER_ID`: App Store Connect API issuer ID.
+- `APP_STORE_CONNECT_API_KEY_KEY`: Base64-encoded contents of the downloaded `.p8` key file.
 
-### 3. Initialize Code Signing (Fastlane Match)
+## What the repo now does automatically
 
-We will use `fastlane match` to automate code signing (certificates and provisioning profiles). You'll usually store these in a private GitHub repository or Google Cloud Storage.
+- `.github/workflows/build-and-test.yml` runs the `deploy-ios` job on pushes to `main`.
+- `iosApp/fastlane/Fastfile` syncs shared metadata from `store_metadata/en-US` into `iosApp/fastlane/metadata/en-US` and mirrors committed iOS screenshots from `store_metadata/assets/screenshots/ios/en-US` into `iosApp/fastlane/screenshots/en-US`.
+- The same lane creates an App Store Connect API session from GitHub secrets, pulls signing assets with `match`, increments the build number from `GITHUB_RUN_NUMBER`, builds an App Store archive, and uploads it to TestFlight.
+- If the required secrets are missing, the lane reports the missing prerequisites and exits cleanly so current pushes stay green while Apple access is still blocked.
+- The current automated iOS path does **not** upload App Store listing screenshots yet; it stages the shared screenshots in Fastlane's expected folder so the repo layout is already aligned when listing upload is added later.
 
-1. Run `fastlane match init` and set up the storage backend.
-2. Run `fastlane match appstore` to generate and save your distribution certificates and profiles securely.
+## One-time setup after Apple access is available
 
-### 4. Provide Secrets to GitHub Actions
+1. Create the App Store Connect app for `com.thevinesh.wackamoji` if it does not already exist.
+2. Create the App Store Connect API key and save the key ID, issuer ID, and base64-encoded `.p8` contents as the GitHub secrets above.
+3. Set up `fastlane match` storage (usually a private Git repository), generate the App Store distribution assets, and save `MATCH_GIT_URL` plus `MATCH_PASSWORD` in GitHub secrets.
+4. If the signing repository is private, also save `MATCH_GIT_BASIC_AUTHORIZATION`.
 
-Add the following as repository secrets in GitHub:
-
-* `MATCH_PASSWORD`: The encryption password you created when running `fastlane match init`.
-* `APP_STORE_CONNECT_API_KEY_KEY_ID`: Your Key ID.
-* `APP_STORE_CONNECT_API_KEY_ISSUER_ID`: Your Issuer ID.
-* `APP_STORE_CONNECT_API_KEY_KEY`: The base64-encoded string of the `.p8` API Key file content.
-* `GIT_PAT_MATCH` (If using a private repo for Match): A GitHub Personal Access Token to clone the certificates repo.
-
-### 5. Update GitHub Actions Workflow and Fastfile
-
-1. **Update `ios/fastlane/Fastfile`**: Add the `match` action to pull certificates, and `app_store_connect_api_key` to authenticate. Finally, add the `upload_to_testflight` or `upload_to_app_store` action.
-2. **Update `.github/workflows/build-and-test.yml`**: Change the current `ios-build-release` job to an `ios-deploy` job that runs `bundle exec fastlane ios deploy`.
-
-By completing these steps, pushing to `main` will automatically build and distribute the iOS app exactly as it does for Android.
+After those external steps are done, no further repo changes are needed: the next push to `main` will take the iOS path all the way through TestFlight upload.

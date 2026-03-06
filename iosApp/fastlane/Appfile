@@ -1,4 +1,5 @@
-app_identifier("com.thevinesh.wackamoji") # The bundle identifier of your app
-apple_id("vineshrr@gmail.com") # Your Apple Developer Portal username (Update if different)
-itunes_connect_id("com.thevinesh.wackamoji") # The bundle identifier can often be used here
-team_id("9S95C26JN6") # Your Development Team ID (Found in project.pbxproj)
+app_identifier(ENV["IOS_APP_IDENTIFIER"] || "com.thevinesh.wackamoji")
+team_id(ENV["IOS_TEAM_ID"] || "9S95C26JN6")
+
+apple_id(ENV["APPLE_ID"]) if ENV["APPLE_ID"].to_s.strip != ""
+itc_team_id(ENV["APP_STORE_CONNECT_TEAM_ID"]) if ENV["APP_STORE_CONNECT_TEAM_ID"].to_s.strip != ""

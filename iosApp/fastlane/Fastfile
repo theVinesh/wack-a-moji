@@ -1,25 +1,46 @@
 default_platform(:ios)
 
+def ci?
+  ENV["CI"].to_s == "true"
+end
+
+def env_present?(key)
+  !ENV[key].to_s.strip.empty?
+end
+
+def ios_app_identifier
+  ENV["IOS_APP_IDENTIFIER"].to_s.strip.empty? ? "com.thevinesh.wackamoji" : ENV["IOS_APP_IDENTIFIER"].strip
+end
+
+def ios_team_id
+  ENV["IOS_TEAM_ID"].to_s.strip.empty? ? "9S95C26JN6" : ENV["IOS_TEAM_ID"].strip
+end
+
+def missing_release_requirements
+  %w[
+    MATCH_GIT_URL
+    MATCH_PASSWORD
+    APP_STORE_CONNECT_API_KEY_KEY_ID
+    APP_STORE_CONNECT_API_KEY_ISSUER_ID
+    APP_STORE_CONNECT_API_KEY_KEY
+  ].reject { |key| env_present?(key) }
+end
+
+def match_options(api_key)
+  options = {
+    type: "appstore",
+    readonly: ci?,
+    app_identifier: [ios_app_identifier],
+    team_id: ios_team_id,
+    api_key: api_key
+  }
+  options[:git_url] = ENV["MATCH_GIT_URL"]
+  options[:git_basic_authorization] = ENV["MATCH_GIT_BASIC_AUTHORIZATION"] if env_present?("MATCH_GIT_BASIC_AUTHORIZATION")
+  options
+end
+
 platform :ios do
-  desc "Capture screenshots and deploy to TestFlight"
-  lane :deploy do
-    # 1. Sync shared metadata to fastlane folder
-    sync_metadata
-
-    # 2. Capture screenshots (Optional: Requires snapshot setup)
-    # snapshot
-
-    # 3. Build & increment build number
-    increment_build_number(build_number: ENV["GITHUB_RUN_NUMBER"] || "1")
-    build_app(scheme: "iosApp")
-
-    # 4. Upload to TestFlight (Requires paid account + API Key)
-    # upload_to_testflight(
-    #   api_key_path: "path/to/api_key.json"
-    # )
-  end
-
-  desc "Sync shared metadata to fastlane folder"
+  desc "Sync shared App Store metadata into fastlane/metadata"
   lane :sync_metadata do
     shared_path = "../../store_metadata"
     dest_path = "./metadata/en-US"
@@ -28,9 +49,59 @@ platform :ios do
     sh "cp #{shared_path}/en-US/short_description.txt #{dest_path}/subtitle.txt"
     sh "cp #{shared_path}/en-US/description.txt #{dest_path}/description.txt"
     sh "cp #{shared_path}/en-US/keywords.txt #{dest_path}/keywords.txt"
-    
-    # Copy icon for App Store Connect metadata (if needed by deliver)
-    # deliver uses it for the store page
-    # sh "cp #{shared_path}/assets/icon_1024.png ./metadata/app_icon.png"
+  end
+
+  desc "Sync shared App Store screenshots into fastlane/screenshots"
+  lane :sync_screenshots do
+    shared_screenshots_path = File.expand_path("../../store_metadata/assets/screenshots/ios/en-US", __dir__)
+    screenshots_path = File.expand_path("screenshots", __dir__)
+    dest_path = File.join(screenshots_path, "en-US")
+
+    sh "rm -rf '#{screenshots_path}'"
+
+    if Dir.exist?(shared_screenshots_path)
+      sh "mkdir -p '#{dest_path}'"
+      sh "cp -R '#{shared_screenshots_path}/.' '#{dest_path}/'"
+    end
+  end
+
+  desc "Build the iOS release and upload it to TestFlight when Apple prerequisites are configured"
+  lane :deploy do
+    sync_metadata
+    sync_screenshots
+
+    missing = missing_release_requirements
+    if missing.any?
+      UI.important("Skipping iOS release upload. Missing Apple-side prerequisites or GitHub secrets: #{missing.join(', ')}. Once the Apple Developer Program is active and these values are configured, pushes to main will upload to TestFlight without repo changes.")
+      next
+    end
+
+    setup_ci if ci?
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+      is_key_content_base64: true
+    )
+
+    match(**match_options(api_key))
+
+    increment_build_number(
+      xcodeproj: "../iosApp.xcodeproj",
+      build_number: ENV["GITHUB_RUN_NUMBER"] || "1"
+    )
+
+    build_app(
+      project: "../iosApp.xcodeproj",
+      scheme: "iosApp",
+      clean: true,
+      export_method: "app-store"
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
   end
 end

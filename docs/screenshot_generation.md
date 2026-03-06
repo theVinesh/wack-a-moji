@@ -1,43 +1,43 @@
 # Manual Screenshot Generation
 
-To save CI time and resources, screenshots are generated locally on your machine and committed to the repository.
+Screenshots are generated locally and committed to the shared store metadata tree so both mobile release pipelines read from one repo-owned source of truth.
+
+## Shared screenshot layout
+
+- Android source screenshots: `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`
+- iOS source screenshots: `store_metadata/assets/screenshots/ios/en-US/`
+
+`capture_screenshots.sh` fills those platform-specific folders from Fastlane Screengrab/Snapshot output.
 
 ## Prerequisites
 
-1. **Xcode and Simulator**: Ensure you have Xcode installed along with an iOS Simulator (e.g., iPhone 15 Pro Max).
-2. **Android Studio and Emulator**: Ensure you have Android Studio installed and a running Android Emulator.
-3. **Fastlane**: Ensure you have Fastlane installed (`gem install fastlane`) or via Homebrew (`brew install fastlane`).
+1. **Android Studio and Emulator**: Have a running Android emulator available.
+2. **Xcode and Simulator**: Have Xcode plus an iOS simulator available (the repo is configured for `iPhone 15 Pro Max`).
+3. **Fastlane**: Use the repo Gemfile (`bundle exec fastlane ...`) or install Fastlane locally.
 
-## Initial iOS Xcode Setup (One-Time)
+## One-time iOS screenshot setup
 
-Because the `iosApp` project does not have a UI Testing Target by default, you must set one up to take iOS screenshots automatically:
+The repo includes `iosApp/fastlane/Snapfile` and `iosApp/fastlane/SnapshotHelper.swift`, but Xcode still needs a UI-test target/scheme before `fastlane snapshot` can capture anything:
 
 1. Open `iosApp/iosApp.xcodeproj` in Xcode.
-2. Go to **File > New > Target...**, choose **UI Testing Bundle** (under iOS / Test), and name it `iosAppUITests`. Make sure the "Target to be Tested" is `iosApp`.
-3. In your terminal, run `cd iosApp && fastlane snapshot init`.
-4. Drag the newly generated `iosApp/fastlane/SnapshotHelper.swift` file into your `iosAppUITests` target in Xcode.
-5. In Xcode, click your new `iosAppUITests` class, and inside the `setUp()` method, ensure you add:
-
-   ```swift
-   let app = XCUIApplication()
-   setupSnapshot(app)
-   app.launch()
-   ```
-
-6. Inside `testExample()`, add `snapshot("0Launch")` (or `"01_GameScreen"`) to take the picture!
-7. **Add a new Xcode scheme** explicitly for the newly created `iosAppUITests` target.
-8. Edit the newly created scheme and ensure the **Shared** checkbox is enabled.
+2. Create a **UI Testing Bundle** target named `iosAppUITests` for app target `iosApp`.
+3. Add `iosApp/fastlane/SnapshotHelper.swift` to that UI-test target.
+4. In the UI test `setUp()`, launch the app through `setupSnapshot(app)` before calling `app.launch()`.
+5. Add at least one `snapshot("01_GameScreen")` call in the UI test.
+6. Create/share the `iosAppUITests` scheme so Fastlane Snapshot can run it.
 
 More information: [Fastlane Snapshot Documentation](https://docs.fastlane.tools/getting-started/ios/screenshots/)
 
-## How to Generate
+## How to generate screenshots
 
-1. Open your terminal and navigate to the root of the project.
-2. Run the manual screenshot script:
+1. From the repo root, run `./capture_screenshots.sh`.
+2. The script runs Android Screengrab and, on macOS, iOS Snapshot.
+3. Android output is copied into `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`.
+4. iOS output is copied into `store_metadata/assets/screenshots/ios/en-US/`.
+5. Commit the generated images you want to keep.
 
-    ```bash
-    ./capture_screenshots.sh
-    ```
+## How the release tooling uses them
 
-3. The script will automatically detect the android emulator and iOS simulator, compile the apps, run the screenshot tests, and copy the final `png` images into `store_metadata/assets/screenshots/`.
-4. Commit these images to your repository. Fastlane will upload them automatically during the next GitHub Actions deployment.
+- `bundle exec fastlane android sync_metadata` copies the Android screenshots into `composeApp/fastlane/metadata/android/en-US/images/phoneScreenshots/`, and the deploy lane uploads them to Google Play.
+- `bundle exec fastlane ios sync_screenshots` mirrors the committed iOS screenshots into `iosApp/fastlane/screenshots/en-US/` so the Fastlane/App Store layout stays aligned.
+- The current GitHub Actions iOS deploy path uploads the TestFlight build only; App Store listing screenshots remain staged repo-side until an App Store listing upload step is run later.
