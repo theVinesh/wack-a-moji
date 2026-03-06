@@ -138,6 +138,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          bundler: default
           bundler-cache: true
 
       - name: Decode Keystore
@@ -178,6 +179,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          bundler: default
           bundler-cache: true
 
       - name: Deploy or report missing Apple prerequisites

@@ -4,18 +4,34 @@ Android publishing is wired for a zero-effort normal flow: once the Play Console
 
 ## Required GitHub repository secrets
 
-- `KEYSTORE_FILE_BASE64`: Base64-encoded upload keystore file (`release.jks`).
-- `KEYSTORE_PASSWORD`: Keystore password.
-- `KEY_ALIAS`: Alias inside the keystore.
-- `KEY_PASSWORD`: Key password for that alias.
-- `PLAY_STORE_CONFIG_JSON`: Google Play service-account JSON with Play Console access.
+- `KEYSTORE_FILE_BASE64`: Base64-encoded Android upload keystore file. Source of truth: the `.jks`/`.keystore` file you choose for Play uploads. Preparation: encode the binary file as a **single line** before pasting it into GitHub (for example, on macOS: `base64 -i path/to/release.jks | tr -d '\n'`). The workflow decodes this secret into `composeApp/release.jks`.
+- `KEYSTORE_PASSWORD`: Password for that keystore file. Source of truth: the password set when the upload keystore was created or exported.
+- `KEY_ALIAS`: Alias inside the chosen keystore. Source of truth: the exact alias name stored in the keystore. This is still a manual choice if you have not yet decided whether to reuse an existing shared alias or create a dedicated alias for this app.
+- `KEY_PASSWORD`: Password for `KEY_ALIAS`. Source of truth: the key password for the selected alias. It is often the same as `KEYSTORE_PASSWORD`, but it must match the alias entry exactly.
+- `PLAY_STORE_CONFIG_JSON`: Raw Google Play service-account JSON for a service account that already has Play Console access to `com.thevinesh.wackamoji`. Source of truth: the exported JSON key file from Google Cloud for the Play-authorized service account. Preparation: paste the **full JSON contents** into the secret as text; do **not** base64-encode it. The workflow writes this secret to `composeApp/play_config.json` before Fastlane upload.
+
+### Secret cross-check matrix
+
+| GitHub secret | Workflow usage | Repo consumer | What must still be done manually |
+| --- | --- | --- | --- |
+| `KEYSTORE_FILE_BASE64` | Decoded in `.github/workflows/build-and-test.yml` | `composeApp/release.jks` | Choose the final upload keystore file and encode it for GitHub |
+| `KEYSTORE_PASSWORD` | Mapped to `ANDROID_RELEASE_KEYSTORE_PASSWORD` | `composeApp/build.gradle.kts` signing config | Record the exact keystore password |
+| `KEY_ALIAS` | Mapped to `ANDROID_RELEASE_KEY_ALIAS` | `composeApp/build.gradle.kts` signing config | Confirm which alias this app will use |
+| `KEY_PASSWORD` | Mapped to `ANDROID_RELEASE_KEY_PASSWORD` | `composeApp/build.gradle.kts` signing config | Record the exact password for the chosen alias |
+| `PLAY_STORE_CONFIG_JSON` | Written to `composeApp/play_config.json` | `composeApp/fastlane/Fastfile` via `ANDROID_PLAY_CONFIG_JSON_PATH` | Export the Play-authorized service-account JSON key and paste the raw JSON |
+
+### Values that cannot be derived from the repo
+
+- The keystore file itself and its passwords are external secrets by design and must come from the maintainer's signing-key source of truth.
+- The final `KEY_ALIAS` value cannot be inferred automatically if you are still deciding between reusing a shared alias and creating a dedicated alias.
+- `PLAY_STORE_CONFIG_JSON` must come from the real Google Cloud service-account key export; the repo only defines where it is consumed.
 
 ## One-time setup
 
 1. Create the Google Play app entry for `com.thevinesh.wackamoji`.
 2. Create or choose the upload keystore you will use for Play uploads.
-3. Grant a Google service account Play Console access, then store its JSON in `PLAY_STORE_CONFIG_JSON`.
-4. Base64-encode the keystore and save it as `KEYSTORE_FILE_BASE64`, then save the keystore passwords/alias in the matching GitHub secrets.
+3. Grant a Google service account Play Console access, export its JSON key, and store the raw JSON contents in `PLAY_STORE_CONFIG_JSON`.
+4. Base64-encode the chosen keystore into `KEYSTORE_FILE_BASE64`, then save the exact matching keystore password, alias, and alias password in the other GitHub secrets.
 5. Commit shared store assets under `store_metadata/`, including any Android phone screenshots in `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`.
 
 ## Normal publish flow
