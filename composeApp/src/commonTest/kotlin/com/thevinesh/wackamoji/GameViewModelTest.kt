@@ -3,7 +3,9 @@ package com.thevinesh.wackamoji
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -154,8 +156,11 @@ class GameViewModelTest {
     // ─── GameViewModel initial state ─────────────────────────────────────────
 
     @Test
-    fun viewModel_initialStateIsDefault() {
+    fun viewModel_initialStateIsDefault() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
+        // Allow coroutines to initialize
+        advanceUntilIdle()
+        
         val state = vm.uiState.value
         assertEquals(0, state.score)
         assertTrue(state.running)
@@ -166,26 +171,35 @@ class GameViewModelTest {
     // ─── GameViewModel.onPauseResume ─────────────────────────────────────────
 
     @Test
-    fun onPauseResume_togglesRunning() {
+    fun onPauseResume_togglesRunning() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
+        advanceUntilIdle()
+        
         assertTrue(vm.uiState.value.running)
 
         vm.onPauseResume()
+        advanceUntilIdle()
         assertFalse(vm.uiState.value.running)
 
         vm.onPauseResume()
+        advanceUntilIdle()
         assertTrue(vm.uiState.value.running)
     }
 
     // ─── GameViewModel.onRestart ─────────────────────────────────────────────
 
     @Test
-    fun onRestart_afterPause_resetsState() {
+    fun onRestart_afterPause_resetsState() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
+        advanceUntilIdle()
+        
         vm.onPauseResume()
+        advanceUntilIdle()
         assertFalse(vm.uiState.value.running)
 
         vm.onRestart()
+        advanceUntilIdle()
+        
         val state = vm.uiState.value
         assertEquals(0, state.score)
         assertEquals(GAME_DURATION_SECONDS, state.timeLeft)
@@ -196,10 +210,62 @@ class GameViewModelTest {
     // ─── GameViewModel.onMoleHit ─────────────────────────────────────────────
 
     @Test
-    fun onMoleHit_doesNothingWhenNoCellIsUp() {
+    fun onMoleHit_doesNothingWhenNoCellIsUp() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
+        advanceUntilIdle()
+        
         // At initial state, all cells are down
         vm.onMoleHit(0)
+        advanceUntilIdle()
+        
         assertEquals(0, vm.uiState.value.score)
+    }
+
+    @Test
+    fun onMoleHit_doesNotScoreWhenGameIsPaused() = runTest(testDispatcher.scheduler) {
+        // Create a paused game state with a mole up at index 0
+        val pausedState = GameUiState(
+            running = false,
+            cells = listOf(true, false, false, false, false, false, false, false, false)
+        )
+        
+        // Use the factory method to create ViewModel with test state
+        // startGame = false prevents coroutines from starting
+        val vm = GameViewModel.createForTest(testState = pausedState, startGame = false)
+        advanceUntilIdle()
+        
+        // Try to hit the mole while game is paused
+        val initialScore = pausedState.score
+        vm.onMoleHit(0)
+        advanceUntilIdle()
+        
+        // Score should not change when game is paused
+        assertEquals(initialScore, vm.uiState.value.score)
+        // The mole should still be up (since scoring didn't happen)
+        assertTrue(vm.uiState.value.cells[0])
+    }
+
+    @Test
+    fun onMoleHit_scoresWhenGameIsRunning() = runTest(testDispatcher.scheduler) {
+        // Create a running game state with a mole up at index 0
+        val runningState = GameUiState(
+            running = true,
+            cells = listOf(true, false, false, false, false, false, false, false, false)
+        )
+        
+        // Use the factory method to create ViewModel with test state
+        // startGame = false prevents coroutines from starting (we only test onMoleHit logic)
+        val vm = GameViewModel.createForTest(testState = runningState, startGame = false)
+        advanceUntilIdle()
+        
+        // Hit the mole while game is running
+        val initialScore = runningState.score
+        vm.onMoleHit(0)
+        advanceUntilIdle()
+        
+        // Score should increase when game is running
+        assertEquals(initialScore + 1, vm.uiState.value.score)
+        // The mole should be down after being hit
+        assertFalse(vm.uiState.value.cells[0])
     }
 }

@@ -65,23 +65,36 @@ data class GameUiState(
 
 // ─── ViewModel ───────────────────────────────────────────────────────────────
 
-class GameViewModel : ViewModel() {
+class GameViewModel private constructor(
+    initialState: GameUiState?,
+    startGame: Boolean
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GameUiState())
-    val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
+    private val _uiState: MutableStateFlow<GameUiState>
+    val uiState: StateFlow<GameUiState>
 
     private var timerJob: Job? = null
     private var spawnJob: Job? = null
 
     init {
-        startGameLoops()
+        _uiState = MutableStateFlow(initialState ?: GameUiState())
+        uiState = _uiState.asStateFlow()
+        if (startGame) {
+            startGameLoops()
+        }
     }
+
+    /**
+     * Default constructor for production use.
+     * Initializes the game with default state and starts game loops.
+     */
+    constructor() : this(null, true)
 
     // ── Actions ──────────────────────────────────────────────────────────────
 
     fun onMoleHit(index: Int) {
         _uiState.update { state ->
-            if (!state.cells[index] || state.gameOver) return@update state
+            if (!state.cells[index] || state.gameOver || !state.running) return@update state
             state.copy(
                 score = state.score + 1,
                 cells = state.cells.toMutableList().also { it[index] = false },
@@ -181,6 +194,19 @@ class GameViewModel : ViewModel() {
             }
 
             delay(DELAY_BETWEEN_MOLES_MS)
+        }
+    }
+
+    companion object {
+        /**
+         * Internal factory method for testing purposes only.
+         * Allows injecting a custom initial state and optionally disabling game loop auto-start.
+         *
+         * @param testState The initial game state to use
+         * @param startGame Whether to start the game loops automatically (default: false)
+         */
+        internal fun createForTest(testState: GameUiState, startGame: Boolean = false): GameViewModel {
+            return GameViewModel(testState, startGame)
         }
     }
 }
