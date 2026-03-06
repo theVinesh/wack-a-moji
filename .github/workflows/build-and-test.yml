@@ -51,6 +51,23 @@ jobs:
       - name: Build Android App
         run: ./gradlew :composeApp:assembleDebug
 
+      - name: Upload Android debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wack-a-moji-android-debug-apk
+          path: composeApp/build/outputs/apk/debug/
+          if-no-files-found: error
+
+      - name: Build Android release AAB
+        run: ./gradlew :composeApp:bundleRelease
+
+      - name: Upload Android release AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wack-a-moji-android-release-aab
+          path: composeApp/build/outputs/bundle/release/composeApp-release.aab
+          if-no-files-found: error
+
   build-ios:
     name: Build iOS App
     needs: test
