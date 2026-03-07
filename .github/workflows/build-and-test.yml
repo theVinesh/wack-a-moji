@@ -128,7 +128,7 @@ jobs:
           if-no-files-found: error
 
   build-wasm:
-    name: Build WebAssembly App
+    name: Build & Deploy Web App
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
