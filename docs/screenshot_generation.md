@@ -38,6 +38,6 @@ More information: [Fastlane Snapshot Documentation](https://docs.fastlane.tools/
 
 ## How the release tooling uses them
 
-- `bundle exec fastlane android sync_metadata` copies the Android screenshots into `composeApp/fastlane/metadata/android/en-US/images/phoneScreenshots/`, and the deploy lane uploads them to Google Play.
-- `bundle exec fastlane ios sync_screenshots` mirrors the committed iOS screenshots into `iosApp/fastlane/screenshots/en-US/` so the Fastlane/App Store layout stays aligned.
-- The current GitHub Actions iOS deploy path uploads the TestFlight build only; App Store listing screenshots remain staged repo-side until an App Store listing upload step is run later.
+- `bundle exec fastlane android sync_metadata` copies the Android screenshots into `composeApp/fastlane/metadata/android/en-US/images/phoneScreenshots/`, and the manual `Sync Store Metadata` workflow runs `bundle exec fastlane android sync_listings` to upload Android listing assets without uploading a new AAB.
+- `bundle exec fastlane ios sync_screenshots` mirrors the committed iOS screenshots into `iosApp/fastlane/screenshots/en-US/`, and the manual `Sync Store Metadata` workflow runs `bundle exec fastlane ios sync_listing` so `deliver` can sync App Store screenshots without uploading a build.
+- The normal GitHub Actions Android/iOS deploy paths stay binary-only (`deploy-android`) and TestFlight-only (`deploy-ios`); listing screenshots sync only through the manual store-metadata workflow.

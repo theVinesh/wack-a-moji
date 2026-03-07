@@ -1,8 +1,10 @@
 # Android Release Setup and Publish Flow
 
-Android publishing is wired for a zero-effort normal flow: once the Play Console setup and GitHub secrets below are in place, a push to `main` builds the signed release bundle and uploads it to the Google Play **internal** track automatically.
+Android publishing is wired for a zero-effort normal flow: once the Play Console setup and GitHub secrets below are in place, a push to `main` builds the signed release bundle and uploads the binary to the Google Play **internal** track automatically.
 
 The current workflow sets the Play upload `release_status` to `draft`. This is required while the Play Console app is still in its draft state because Google rejects the default completed-release behavior for draft apps. After the first Play release is fully set up and the app is no longer draft-only, you can switch `ANDROID_PLAY_RELEASE_STATUS` in `.github/workflows/build-and-test.yml` to `completed` (or another supported Play release status) if you want automation to publish beyond draft.
+
+Normal push-based deploys are now intentionally **binary-only**. Store listing metadata, graphics, and screenshots remain sourced from `store_metadata/`, but they sync only when you manually run the GitHub Actions workflow `Sync Store Metadata` on a ref that contains relevant listing changes.
 
 ## Required GitHub repository secrets
 
@@ -38,10 +40,18 @@ The current workflow sets the Play upload `release_status` to `draft`. This is r
 
 ## Normal publish flow
 
-1. Update app code and store metadata as needed.
-2. Commit any new Android screenshots to `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`.
+1. Update app code as needed.
+2. Commit any store listing metadata or Android screenshots to `store_metadata/`.
 3. Merge or push to `main`.
-4. GitHub Actions runs `deploy-android`, decodes the keystore/service-account key, builds the release AAB, syncs metadata from `store_metadata/`, and uploads to the Play internal track as a draft release.
+4. GitHub Actions runs `deploy-android`, decodes the keystore/service-account key, builds the release AAB, and uploads the binary to the Play internal track as a draft release.
+
+## Manual store listing sync
+
+1. Commit the Android listing changes under `store_metadata/` (shared text, graphics, and Android screenshots).
+2. In GitHub Actions, run the `Sync Store Metadata` workflow on the branch/commit that contains those listing changes.
+3. The workflow compares the selected ref against `HEAD^`. If no Android-relevant paths changed, it exits successfully with nothing to do.
+4. If Android-relevant listing paths changed, Fastlane runs `android sync_listings`, stages content from `store_metadata/`, and uploads metadata/images/screenshots without uploading a new AAB.
+5. Android screenshot and image uploads use Fastlane supply's `sync_image_upload` behavior so unchanged assets are skipped where Play/Fastlane can detect matching content.
 
 ## Remaining manual steps
 

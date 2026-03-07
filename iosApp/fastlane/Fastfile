@@ -59,13 +59,16 @@ end
 platform :ios do
   desc "Sync shared App Store metadata into fastlane/metadata"
   lane :sync_metadata do
-    shared_path = "../../store_metadata"
-    dest_path = "./metadata/en-US"
-    sh "mkdir -p #{dest_path}"
-    sh "cp #{shared_path}/en-US/name.txt #{dest_path}/name.txt"
-    sh "cp #{shared_path}/en-US/short_description.txt #{dest_path}/subtitle.txt"
-    sh "cp #{shared_path}/en-US/description.txt #{dest_path}/description.txt"
-    sh "cp #{shared_path}/en-US/keywords.txt #{dest_path}/keywords.txt"
+    shared_path = File.expand_path("../../store_metadata", __dir__)
+    metadata_path = File.expand_path("metadata", __dir__)
+    dest_path = File.join(metadata_path, "en-US")
+
+    sh "rm -rf '#{metadata_path}'"
+    sh "mkdir -p '#{dest_path}'"
+    sh "cp '#{File.join(shared_path, 'en-US', 'name.txt')}' '#{File.join(dest_path, 'name.txt')}'"
+    sh "cp '#{File.join(shared_path, 'en-US', 'short_description.txt')}' '#{File.join(dest_path, 'subtitle.txt')}'"
+    sh "cp '#{File.join(shared_path, 'en-US', 'description.txt')}' '#{File.join(dest_path, 'description.txt')}'"
+    sh "cp '#{File.join(shared_path, 'en-US', 'keywords.txt')}' '#{File.join(dest_path, 'keywords.txt')}'"
   end
 
   desc "Sync shared App Store screenshots into fastlane/screenshots"
@@ -127,5 +130,43 @@ platform :ios do
       ipa: ipa_path,
       skip_waiting_for_build_processing: true
     )
+  end
+
+  desc "Sync App Store metadata and screenshots without uploading a new build"
+  lane :sync_listing do
+    missing = missing_upload_requirements
+    if missing.any?
+      UI.user_error!("Missing App Store Connect API credentials for iOS listing sync: #{missing.join(', ')}")
+    end
+
+    api_key = app_store_api_key
+
+    sync_metadata
+    sync_screenshots
+
+    metadata_path = File.expand_path("metadata", __dir__)
+    screenshots_path = File.expand_path("screenshots", __dir__)
+
+    deliver_options = {
+      api_key: api_key,
+      app_identifier: ios_app_identifier,
+      platform: "ios",
+      metadata_path: metadata_path,
+      skip_binary_upload: true,
+      skip_app_version_update: true,
+      submit_for_review: false,
+      run_precheck_before_submit: false,
+      force: true
+    }
+
+    if Dir.exist?(screenshots_path)
+      ENV["FASTLANE_ENABLE_BETA_DELIVER_SYNC_SCREENSHOTS"] = "true"
+      deliver_options[:screenshots_path] = screenshots_path
+      deliver_options[:sync_screenshots] = true
+    else
+      deliver_options[:skip_screenshots] = true
+    end
+
+    deliver(**deliver_options)
   end
 end
