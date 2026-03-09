@@ -57,18 +57,20 @@ def match_options(api_key)
 end
 
 platform :ios do
-  desc "Sync shared App Store metadata into fastlane/metadata"
+  desc "Sync App Store metadata into fastlane/metadata"
   lane :sync_metadata do
     shared_path = File.expand_path("../../store_metadata", __dir__)
+    ios_metadata_path = File.join(shared_path, "ios", "metadata")
     metadata_path = File.expand_path("metadata", __dir__)
-    dest_path = File.join(metadata_path, "en-US")
+    shared_locale_path = File.join(shared_path, "en-US")
+    locale_path = File.join(metadata_path, "en-US")
 
     sh "rm -rf '#{metadata_path}'"
-    sh "mkdir -p '#{dest_path}'"
-    sh "cp '#{File.join(shared_path, 'en-US', 'name.txt')}' '#{File.join(dest_path, 'name.txt')}'"
-    sh "cp '#{File.join(shared_path, 'en-US', 'short_description.txt')}' '#{File.join(dest_path, 'subtitle.txt')}'"
-    sh "cp '#{File.join(shared_path, 'en-US', 'description.txt')}' '#{File.join(dest_path, 'description.txt')}'"
-    sh "cp '#{File.join(shared_path, 'en-US', 'keywords.txt')}' '#{File.join(dest_path, 'keywords.txt')}'"
+    sh "mkdir -p '#{metadata_path}'"
+    sh "cp -R '#{ios_metadata_path}/.' '#{metadata_path}/'"
+    sh "mkdir -p '#{locale_path}'"
+    sh "cp '#{File.join(shared_locale_path, 'name.txt')}' '#{File.join(locale_path, 'name.txt')}'"
+    sh "cp '#{File.join(shared_locale_path, 'description.txt')}' '#{File.join(locale_path, 'description.txt')}'"
   end
 
   desc "Sync shared App Store screenshots into fastlane/screenshots"

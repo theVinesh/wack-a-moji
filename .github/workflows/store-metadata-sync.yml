@@ -53,9 +53,8 @@ jobs:
 
           check_changed ios_changed \
             store_metadata/en-US/name.txt \
-            store_metadata/en-US/short_description.txt \
             store_metadata/en-US/description.txt \
-            store_metadata/en-US/keywords.txt \
+            store_metadata/ios/metadata \
             store_metadata/assets/screenshots/ios
 
   sync-android-listing:
