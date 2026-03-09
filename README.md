@@ -48,6 +48,10 @@ Open the [`/iosApp`](./iosApp) directory in Xcode and run it from there on a sim
 
 When contributing to this project, please adhere to the guidelines outlined in [`AGENTS.md`](./AGENTS.md).
 
+## Release Process
+
+For the current cross-platform mobile release flow, see [`docs/release_process.md`](./docs/release_process.md).
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).

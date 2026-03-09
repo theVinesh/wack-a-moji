@@ -1,54 +1,42 @@
 # Repository Guidelines: WackAMoji
 
-This document contains specific guidelines and context for AI agents and human contributors working on the **WackAMoji** project.
+Use this file as the quick repo-specific guide for contributors and agents. Keep it concise and defer release details to the canonical release doc.
 
-## Project Context
+## Project Overview
 
-WackAMoji is a Kotlin Multiplatform (KMP) game targeting Android and iOS.
-**Key Technical & Design Constraints:**
+WackAMoji is a Kotlin Multiplatform game for Android and iOS.
 
-- **UI Architecture**: Game UI components (e.g., `CloudsBackground`, `ScoreDisplay`, `TimerSection`, `LevelIndicator`, `GameButtons`, `GameOverOverlay`) are extracted into separate files.
-- **Game Logic**: Pure game logic (state, scoring, timing) is separated from UI components.
+- Shared app/game code: `composeApp/src/commonMain/kotlin/com/thevinesh/wackamoji`
+- Shared tests: `composeApp/src/commonTest/kotlin/com/thevinesh/wackamoji`
+- Android entrypoint: `composeApp/src/androidMain`
+- iOS host app: `iosApp/iosApp`
 
-## Project Structure & Module Organization
+## Code Expectations
 
-- **Shared Code**: `composeApp/src/commonMain/kotlin/com/thevinesh/wackamole`
-- **Android Entrypoint**: `composeApp/src/androidMain`
-- **iOS Entrypoint**: `iosApp/iosApp` (SwiftUI host app). Open `iosApp/iosApp.xcodeproj` in Xcode.
-- **Tests**: `composeApp/src/commonTest/kotlin`
+- Keep pure game logic separate from UI.
+- Keep extracted UI pieces in their own files (`CloudsBackground`, `ScoreDisplay`, `TimerSection`, `LevelIndicator`, `GameButtons`, `GameOverOverlay`, etc.).
+- Put cross-platform code in `commonMain`; keep platform-specific bridges in `androidMain` / `iosMain`.
+- Follow Kotlin conventions: 4-space indent, `PascalCase` types, `camelCase` members, `UPPER_SNAKE_CASE` constants.
+- Use package namespace `com.thevinesh.wackamoji.*`.
+- Avoid new dependencies unless they are clearly necessary.
 
-## Build, Test & Run
+## Compose & Testing
 
-- Compile all targets: `./gradlew build`
-- Unit tests: `./gradlew test`
-- Android debug build: `./gradlew :composeApp:assembleDebug`
-- iOS app: open `iosApp/iosApp.xcodeproj` in Xcode and run on a simulator/device.
+- Add a deterministic `@Preview` for every new Composable.
+- Prefer hard-coded preview data; avoid timers, network calls, and nondeterministic state.
+- Add or update `kotlin.test` coverage in `composeApp/src/commonTest/kotlin` when changing game logic.
+- Useful checks:
+  - `./gradlew test`
+  - `./gradlew build`
+  - `./gradlew :composeApp:assembleDebug`
 
-## Coding Style & Naming Conventions
+## Release Process
 
-- Follow official Kotlin style (4‑space indent, max 100–120 cols).
-- Packages: `com.thevinesh.wackamoji.*`.
-- Types: `PascalCase`; functions/vars: `camelCase`; constants: `UPPER_SNAKE_CASE`.
-- Keep shared UI/state in `commonMain`; platform-specific bridges in `androidMain`/`iosMain`.
+- The canonical release guide lives at `docs/release_process.md`.
+- Do **not** duplicate release steps, signing setup, metadata-sync instructions, or screenshot workflow details here.
+- When release work changes, update the canonical release doc and keep this file limited to the pointer above.
 
-### Compose Previews
+## Contribution Notes
 
-- Provide a `@Preview` for every new Composable added.
-- Previews should encompass all isolated UI components.
-- Keep previews deterministic (no timers/network). Use hard-coded sample data.
-
-### Commit Messages
-
-- Prefer Conventional Commits (e.g., `feat: update game loop logic`, `fix: isometric shadow clipping`).
-- Provide a single, one-line summary.
-
-## Testing Guidelines
-
-- Framework: `kotlin.test` in `composeApp/src/commonTest`.
-- Ensure newly extracted game logic is accompanied by robust unit tests.
-
-## Agent-Specific Notes
-
-- **UI Changes**: When altering the game UI, strictly adhere to the established beautiful, childish design language.
-- **Dependencies**: Avoid adding new dependencies unless absolutely necessary.
-- **Platform Bridging**: Place cross‑platform code in `commonMain`; use `expect/actual` if needed for platform bridges.
+- Preserve the app's playful, child-friendly visual style when adjusting UI.
+- Prefer Conventional Commit style for human-authored commits, e.g. `feat: ...` or `fix: ...`.
