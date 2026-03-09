@@ -1,43 +1,47 @@
 # Manual Screenshot Generation
 
-Screenshots are generated locally and committed to the shared store metadata tree so both mobile release pipelines read from one repo-owned source of truth.
+Screenshots are generated locally, staged for review, and only the curated final set is copied into the shared store metadata tree that the release tooling uploads.
 
 ## Shared screenshot layout
 
 - Android source screenshots: `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`
-- iOS source screenshots: `store_metadata/assets/screenshots/ios/en-US/`
+- iOS final curated screenshots for upload: `store_metadata/assets/screenshots/ios/en-US/`
+- iOS generated Snapshot intake: `store_metadata/assets/screenshots/ios/intake/generated/en-US/`
+- iOS user-provided iPhone intake: `store_metadata/assets/screenshots/ios/intake/user-provided-iphone/en-US/`
 
-`capture_screenshots.sh` fills those platform-specific folders from Fastlane Screengrab/Snapshot output.
+`capture_screenshots.sh` fills Android’s final source folder directly, but stages iOS captures in the intake folders so the final App Store set can be curated separately.
 
 ## Prerequisites
 
 1. **Android Studio and Emulator**: Have a running Android emulator available.
-2. **Xcode and Simulator**: Have Xcode plus an iOS simulator available (the repo is configured for `iPhone 15 Pro Max`).
+2. **Xcode and Simulator**: Have Xcode plus the repo’s configured iPhone and iPad simulators available (`iPhone 17 Pro Max` and `iPad Pro 13-inch (M4)` in the current `Snapfile`).
 3. **Fastlane**: Use the repo Gemfile (`bundle exec fastlane ...`) or install Fastlane locally.
 
-## One-time iOS screenshot setup
+## In-repo iOS screenshot plumbing
 
-The repo includes `iosApp/fastlane/Snapfile` and `iosApp/fastlane/SnapshotHelper.swift`, but Xcode still needs a UI-test target/scheme before `fastlane snapshot` can capture anything:
+The repo now includes the minimum iOS screenshot automation plumbing needed for a universal App Store package:
 
-1. Open `iosApp/iosApp.xcodeproj` in Xcode.
-2. Create a **UI Testing Bundle** target named `iosAppUITests` for app target `iosApp`.
-3. Add `iosApp/fastlane/SnapshotHelper.swift` to that UI-test target.
-4. In the UI test `setUp()`, launch the app through `setupSnapshot(app)` before calling `app.launch()`.
-5. Add at least one `snapshot("01_GameScreen")` call in the UI test.
-6. Create/share the `iosAppUITests` scheme so Fastlane Snapshot can run it.
+1. Shared scheme: `iosApp/iosApp.xcodeproj/xcshareddata/xcschemes/iosAppUITests.xcscheme`
+2. Snapshot helper compiled into the UI-test target: `iosApp/iosAppUITests/SnapshotHelper.swift`
+3. Deterministic capture tests: `iosApp/iosAppUITests/iosAppUITests.swift`
+4. Launch-argument driven screenshot states: `gameplay` and `game-over`
+5. Snapshot device matrix: one iPhone + one iPad simulator, which produces a minimal 2 iPhone + 2 iPad package because each simulator captures the same two scenes
 
 More information: [Fastlane Snapshot Documentation](https://docs.fastlane.tools/getting-started/ios/screenshots/)
 
 ## How to generate screenshots
 
-1. From the repo root, run `./capture_screenshots.sh`.
+1. Optional but recommended: stage the two user-provided iPhone references while you capture automated shots:
+   - `./capture_screenshots.sh --ios-user-shot /path/to/gameplay-reference.png --ios-user-shot /path/to/game-over-reference.png`
 2. The script runs Android Screengrab and, on macOS, iOS Snapshot.
 3. Android output is copied into `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`.
-4. iOS output is copied into `store_metadata/assets/screenshots/ios/en-US/`.
-5. Commit the generated images you want to keep.
+4. In this repo, `bundle exec fastlane snapshot` writes generated iOS captures to `iosApp/screenshots/en-US/`.
+5. `capture_screenshots.sh` copies those generated Snapshot files into `store_metadata/assets/screenshots/ios/intake/generated/en-US/`.
+6. The two user-provided iPhone screenshots are copied into `store_metadata/assets/screenshots/ios/intake/user-provided-iphone/en-US/` when provided via `--ios-user-shot`.
+7. Curate the final uploadable 2 iPhone + 2 iPad set later by copying only the approved images into `store_metadata/assets/screenshots/ios/en-US/`.
 
 ## How the release tooling uses them
 
 - `bundle exec fastlane android sync_metadata` copies the Android screenshots into `composeApp/fastlane/metadata/android/en-US/images/phoneScreenshots/`, and the manual `Sync Store Metadata` workflow runs `bundle exec fastlane android sync_listings` to upload Android listing assets without uploading a new AAB.
-- `bundle exec fastlane ios sync_screenshots` mirrors the committed iOS screenshots into `iosApp/fastlane/screenshots/en-US/`, and the manual `Sync Store Metadata` workflow runs `bundle exec fastlane ios sync_listing` so `deliver` can sync App Store screenshots without uploading a build.
+- `bundle exec fastlane ios sync_screenshots` mirrors only the curated final screenshots from `store_metadata/assets/screenshots/ios/en-US/` into `iosApp/fastlane/screenshots/en-US/` for `deliver`. This is a later release-sync step and is separate from the raw Snapshot capture output in `iosApp/screenshots/en-US/`.
 - The normal GitHub Actions Android/iOS deploy paths stay binary-only (`deploy-android`) and TestFlight-only (`deploy-ios`); listing screenshots sync only through the manual store-metadata workflow.

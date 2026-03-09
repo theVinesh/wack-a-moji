@@ -49,6 +49,40 @@ internal fun randomMoleEmoji(): String {
     return pool[Random.nextInt(pool.size)]
 }
 
+internal enum class ScreenshotScenario(val launchValue: String) {
+    Gameplay("gameplay"),
+    GameOver("game-over"),
+}
+
+private val screenshotEmojis = listOf("😎", "🤪", "😂", "😤", "🥴", "😅", "🙄", "😡", "😎")
+
+internal fun screenshotScenarioFromLaunchValue(value: String?): ScreenshotScenario? =
+    ScreenshotScenario.entries.firstOrNull { it.launchValue == value }
+
+internal fun screenshotStateForScenario(scenario: ScreenshotScenario): GameUiState =
+    when (scenario) {
+        ScreenshotScenario.Gameplay -> GameUiState(
+            score = 12,
+            running = true,
+            timeLeft = 9,
+            gameOver = false,
+            cells = listOf(false, false, true, false, false, false, false, false, false),
+            emojis = screenshotEmojis,
+        )
+
+        ScreenshotScenario.GameOver -> GameUiState(
+            score = 32,
+            running = false,
+            timeLeft = 0,
+            gameOver = true,
+            cells = List(9) { false },
+            emojis = screenshotEmojis,
+        )
+    }
+
+private fun initialGameUiState(screenshotScenario: ScreenshotScenario?): GameUiState =
+    screenshotScenario?.let(::screenshotStateForScenario) ?: GameUiState()
+
 // ─── UI State ────────────────────────────────────────────────────────────────
 
 data class GameUiState(
@@ -65,16 +99,20 @@ data class GameUiState(
 
 // ─── ViewModel ───────────────────────────────────────────────────────────────
 
-class GameViewModel : ViewModel() {
+class GameViewModel internal constructor(
+    private val screenshotScenario: ScreenshotScenario? = null,
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GameUiState())
+    private val _uiState = MutableStateFlow(initialGameUiState(screenshotScenario))
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
     private var spawnJob: Job? = null
 
     init {
-        startGameLoops()
+        if (screenshotScenario == null) {
+            startGameLoops()
+        }
     }
 
     // ── Actions ──────────────────────────────────────────────────────────────
@@ -90,11 +128,19 @@ class GameViewModel : ViewModel() {
     }
 
     fun onRestart() {
+        if (screenshotScenario != null) {
+            _uiState.value = screenshotStateForScenario(screenshotScenario)
+            stopGameLoops()
+            return
+        }
+
         _uiState.value = GameUiState()
         startGameLoops()
     }
 
     fun onPauseResume() {
+        if (screenshotScenario != null) return
+
         _uiState.update { state ->
             if (state.gameOver) return@update state
             state.copy(running = !state.running)

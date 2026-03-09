@@ -25,11 +25,11 @@ Add these secrets once the Apple account prerequisites above are complete:
 ## What the repo now does automatically
 
 - `.github/workflows/build-and-test.yml` runs the `deploy-ios` job on pushes to `main`.
-- `iosApp/fastlane/Fastfile` includes helper lanes that sync shared metadata from `store_metadata/en-US` into `iosApp/fastlane/metadata/en-US` and mirror committed iOS screenshots from `store_metadata/assets/screenshots/ios/en-US` into `iosApp/fastlane/screenshots/en-US` for the manual listing-sync path.
-- The push-based iOS release automation creates an App Store Connect API session from GitHub secrets, pulls signing assets with `match`, increments the build number from `GITHUB_RUN_NUMBER`, builds an App Store archive, and uploads it to TestFlight.
+- `iosApp/fastlane/Fastfile` includes helper lanes that stage the shared app name and App Store description from `store_metadata/en-US/`, layer iOS-only App Store fields from `store_metadata/ios/metadata/`, and mirror committed iOS screenshots from `store_metadata/assets/screenshots/ios/en-US` into `iosApp/fastlane/screenshots/en-US` for the manual listing-sync path.
+- The push-based iOS release automation creates an App Store Connect API session from GitHub secrets, pulls signing assets with `match`, increments the build number from `GITHUB_RUN_NUMBER`, derives `MARKETING_VERSION` as `1.0.$(CURRENT_PROJECT_VERSION)` so routine manual iOS version bumps are not needed, builds an App Store archive, and uploads it to TestFlight.
 - If the required secrets are missing, the lane reports the missing prerequisites and exits cleanly so current pushes stay green while Apple access is still blocked.
 - The normal push-based iOS path does **not** upload App Store listing metadata or screenshots.
-- `.github/workflows/store-metadata-sync.yml` provides a separate manual `Sync Store Metadata` workflow that compares the selected ref against `HEAD^` and runs the listing-only Fastlane lane only when iOS-relevant shared metadata or iOS screenshots changed.
+- `.github/workflows/store-metadata-sync.yml` provides a separate manual `Sync Store Metadata` workflow that compares the selected ref against `HEAD^` and runs the listing-only Fastlane lane only when iOS-relevant shared metadata, iOS-only App Store metadata, or iOS screenshots changed.
 - The manual iOS listing sync path uses `deliver` with `skip_binary_upload: true`, `submit_for_review: false`, and screenshot syncing enabled, so it updates listing content without uploading an IPA or submitting anything for review.
 
 ## One-time setup after Apple access is available
@@ -43,7 +43,7 @@ After those external steps are done, no further repo changes are needed: the nex
 
 ## Manual App Store listing sync
 
-1. Commit shared App Store text changes in `store_metadata/en-US/` and any iOS screenshots in `store_metadata/assets/screenshots/ios/en-US/`.
+1. Commit shared cross-store copy changes in `store_metadata/en-US/`, iOS-only App Store fields in `store_metadata/ios/metadata/`, and any iOS screenshots in `store_metadata/assets/screenshots/ios/en-US/`.
 2. In GitHub Actions, run `Sync Store Metadata` on the branch/commit that contains those listing changes.
 3. The workflow checks the selected ref against `HEAD^`. If no iOS-relevant listing paths changed, the iOS listing job exits cleanly without calling App Store Connect.
-4. If iOS-relevant listing paths changed, Fastlane stages the shared metadata/screenshots and runs `deliver` in listing-only mode so metadata and screenshots sync without uploading an IPA or submitting for review.
+4. If iOS-relevant listing paths changed, Fastlane stages shared cross-store metadata plus iOS-only App Store fields/screenshots and runs `deliver` in listing-only mode so metadata and screenshots sync without uploading an IPA or submitting for review.

@@ -23,7 +23,13 @@ val LocalEmojiFont = compositionLocalOf<FontFamily?> { null }
 
 @Composable
 @Preview
-fun App(gameViewModel: GameViewModel = viewModel { GameViewModel() }) {
+fun App() {
+    App(screenshotScenario = null)
+}
+
+@Composable
+internal fun App(screenshotScenario: ScreenshotScenario?) {
+    val gameViewModel = viewModel { GameViewModel(screenshotScenario) }
     val state by gameViewModel.uiState.collectAsState()
 
     MaterialTheme {

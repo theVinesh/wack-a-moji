@@ -151,6 +151,37 @@ class GameViewModelTest {
         assertEquals(0.0f, state.timerFraction)
     }
 
+    @Test
+    fun screenshotScenarioFromLaunchValue_returnsMatchingScenario() {
+        assertEquals(ScreenshotScenario.Gameplay, screenshotScenarioFromLaunchValue("gameplay"))
+        assertEquals(ScreenshotScenario.GameOver, screenshotScenarioFromLaunchValue("game-over"))
+        assertEquals(null, screenshotScenarioFromLaunchValue("unknown"))
+    }
+
+    @Test
+    fun screenshotStateForScenario_gameplayMatchesExpectedShot() {
+        val state = screenshotStateForScenario(ScreenshotScenario.Gameplay)
+
+        assertEquals(12, state.score)
+        assertEquals(9, state.timeLeft)
+        assertTrue(state.running)
+        assertFalse(state.gameOver)
+        assertEquals(2, state.level)
+        assertEquals(1, state.cells.count { it })
+    }
+
+    @Test
+    fun screenshotStateForScenario_gameOverMatchesExpectedShot() {
+        val state = screenshotStateForScenario(ScreenshotScenario.GameOver)
+
+        assertEquals(32, state.score)
+        assertEquals(0, state.timeLeft)
+        assertFalse(state.running)
+        assertTrue(state.gameOver)
+        assertEquals(4, state.level)
+        assertTrue(state.cells.all { !it })
+    }
+
     // ─── GameViewModel initial state ─────────────────────────────────────────
 
     @Test
@@ -161,6 +192,13 @@ class GameViewModelTest {
         assertTrue(state.running)
         assertEquals(GAME_DURATION_SECONDS, state.timeLeft)
         assertFalse(state.gameOver)
+    }
+
+    @Test
+    fun viewModel_screenshotScenarioStartsInDeterministicState() {
+        val vm = GameViewModel(ScreenshotScenario.GameOver)
+
+        assertEquals(screenshotStateForScenario(ScreenshotScenario.GameOver), vm.uiState.value)
     }
 
     // ─── GameViewModel.onPauseResume ─────────────────────────────────────────
