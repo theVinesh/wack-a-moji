@@ -48,6 +48,8 @@ Normal push-based deploys are now intentionally **binary-only**. Store listing m
 ## Manual store listing sync
 
 1. Commit the Android listing changes under `store_metadata/` (shared text, graphics, and Android screenshots).
+   - Keep store text plain and emoji-free, especially in shared copy such as `store_metadata/en-US/name.txt` and `store_metadata/en-US/description.txt`.
+   - Cross-platform rule: even when changing Android listing text, avoid emojis in repo-managed store metadata because the same content may also be synced to iOS, where App Store validation can reject unsupported characters.
 2. In GitHub Actions, run the `Sync Store Metadata` workflow on the branch/commit that contains those listing changes.
 3. The workflow compares the selected ref against `HEAD^`. If no Android-relevant paths changed, it exits successfully with nothing to do.
 4. If Android-relevant listing paths changed, Fastlane runs `android sync_listings`, stages content from `store_metadata/`, and uploads metadata/images/screenshots without uploading a new AAB.

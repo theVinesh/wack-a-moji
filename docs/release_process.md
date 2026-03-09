@@ -33,6 +33,14 @@ Current iOS-only metadata includes `subtitle`, `promotional_text`, `keywords`, `
 - iOS App Store-only fields live under `store_metadata/ios/metadata/en-US/`.
 - The checked-in `store_metadata/en-US/keywords.txt` is **not** part of the current automated release path. Treat `store_metadata/ios/metadata/en-US/keywords.txt` as the active iOS keywords source unless the automation is changed later.
 
+### Metadata character policy
+
+- Treat store listing text in `store_metadata/` as plain text for both platforms.
+- Do **not** include emoji characters in shared or platform-specific store metadata.
+- Practical reason: App Store Connect validation may reject emoji or other unsupported listing characters during metadata sync, even if the same copy seems acceptable elsewhere.
+- Before running `Sync Store Metadata` (or a local Fastlane listing sync), quickly check `store_metadata/en-US/` and `store_metadata/ios/metadata/en-US/` for emojis and replace them with plain-language wording.
+- If you want extra emphasis in listing copy, prefer words over symbols so the same metadata remains safe to sync across Android and iOS.
+
 ## Generated folders: do not edit by hand
 
 These are staging outputs, not sources of truth:
@@ -173,7 +181,7 @@ If you only changed listing content, you can run this manual workflow on the com
 ### For a normal release
 
 1. Update app code if needed.
-2. Update repo-managed listing content in `store_metadata/`.
+2. Update repo-managed listing content in `store_metadata/`, keeping store text emoji-free and plain-text-safe for both Play and App Store sync.
 3. Generate Android/iOS screenshots with `./capture_screenshots.sh`.
 4. Curate the final App Store screenshots into `store_metadata/assets/screenshots/ios/en-US/`.
 5. Merge or push the release changes to `main`.
@@ -181,7 +189,7 @@ If you only changed listing content, you can run this manual workflow on the com
    - Android AAB uploaded to Play internal draft
    - iOS IPA uploaded to TestFlight
 7. Verify the uploaded binaries in Play Console / TestFlight.
-8. Run `Sync Store Metadata` on the ref containing the listing changes.
+8. Run `Sync Store Metadata` on the ref containing the listing changes after a final quick pass for unsupported characters in store text.
 9. Perform store-console-only steps manually:
    - review listing changes
    - promote Android beyond internal/draft when ready
