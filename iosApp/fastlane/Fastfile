@@ -101,12 +101,12 @@ platform :ios do
     match(**match_options(api_key))
 
     increment_build_number(
-      xcodeproj: "../iosApp.xcodeproj",
+      xcodeproj: "iosApp.xcodeproj",
       build_number: ENV["GITHUB_RUN_NUMBER"] || "1"
     )
 
     build_app(
-      project: "../iosApp.xcodeproj",
+      project: "iosApp.xcodeproj",
       scheme: "iosApp",
       clean: true,
       export_method: "app-store",
