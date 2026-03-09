@@ -32,7 +32,8 @@ jobs:
     name: Build Android App
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Temporarily paused until the iOS CI release path is fixed.
+    if: ${{ false }}
 
     steps:
       - name: Checkout repository
@@ -131,7 +132,8 @@ jobs:
     name: Build & Deploy Web App
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Temporarily paused until the iOS CI release path is fixed.
+    if: ${{ false }}
     permissions:
       pages: write
       id-token: write
@@ -173,7 +175,8 @@ jobs:
   deploy-android:
     name: Deploy Android to Play Internal
     needs: [build-android]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Temporarily paused until the iOS CI release path is fixed.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
