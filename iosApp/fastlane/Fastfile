@@ -34,6 +34,10 @@ def missing_upload_requirements
   ].reject { |key| env_present?(key) }
 end
 
+def ios_build_number
+  ENV["GITHUB_RUN_NUMBER"].to_s.strip.empty? ? "1" : ENV["GITHUB_RUN_NUMBER"].strip
+end
+
 def app_store_api_key
   app_store_connect_api_key(
     key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
@@ -97,19 +101,17 @@ platform :ios do
     setup_ci if ci?
 
     api_key = app_store_api_key
+    build_number = ios_build_number
 
     match(**match_options(api_key))
-
-    increment_build_number(
-      xcodeproj: "iosApp.xcodeproj",
-      build_number: ENV["GITHUB_RUN_NUMBER"] || "1"
-    )
+    UI.message("Building iOS release artifact with build number #{build_number}")
 
     build_app(
       project: "iosApp.xcodeproj",
       scheme: "iosApp",
       clean: true,
       export_method: "app-store",
+      xcargs: "APP_BUILD_NUMBER=#{build_number}",
       output_directory: "build/ci-release",
       output_name: "Wack-A-Moji.ipa"
     )
