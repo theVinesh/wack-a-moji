@@ -82,6 +82,7 @@ That matrix captures `gameplay` and `game-over`, which produces the current mini
 
 - Workflow: `.github/workflows/build-and-test.yml`
 - Jobs: `build-ios` -> `deploy-ios`
+- Runner/toolchain requirement: use `macos-26` / Xcode 26 or later so the archive is built with the iOS 26 SDK or later for App Store Connect compliance.
 - Build step: `bundle exec fastlane ios build_release_artifact`
 - Upload step: `bundle exec fastlane ios deploy`
 - Result: IPA uploaded to **TestFlight**
@@ -98,6 +99,7 @@ That matrix captures `gameplay` and `game-over`, which produces the current mini
 ### iOS
 
 - `ios build_release_artifact` sets the build number from `GITHUB_RUN_NUMBER`.
+- App Store / TestFlight release builds must be produced with Xcode 26 or later so the resulting IPA is built against the iOS 26 SDK or later.
 - `iosApp/Configuration/Config.xcconfig` defines:
   - `CURRENT_PROJECT_VERSION=1` as the base build-number setting
   - `MARKETING_VERSION=1.0.$(CURRENT_PROJECT_VERSION)`
