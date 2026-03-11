@@ -40,10 +40,16 @@ internal fun appScreenAfterStartGame(): AppScreen = AppScreen.Gameplay
 
 internal fun appScreenAfterBackToMenu(): AppScreen = AppScreen.Menu
 
+private val APP_PREVIEW_AUDIO_SETTINGS = AudioSettings(
+    musicVolume = DEFAULT_MUSIC_VOLUME,
+    soundEffectVolume = DEFAULT_SOUND_EFFECT_VOLUME,
+)
+
 @Composable
-@Preview
 fun App() {
-    val audioSettingsStore = remember { AudioSettingsStore(InMemoryAudioSettingsStorage()) }
+    val audioSettingsStore = remember {
+        AudioSettingsStore(InMemoryAudioSettingsStorage(APP_PREVIEW_AUDIO_SETTINGS))
+    }
 
     App(
         screenshotScenario = null,
@@ -51,6 +57,12 @@ fun App() {
         soundEffectPlayer = NoOpSoundEffectPlayer,
         audioSettingsStore = audioSettingsStore,
     )
+}
+
+@Preview
+@Composable
+private fun AppPreview() {
+    App()
 }
 
 @Composable

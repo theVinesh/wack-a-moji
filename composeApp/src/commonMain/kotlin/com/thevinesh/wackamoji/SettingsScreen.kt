@@ -19,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +50,11 @@ internal fun settingsScreenBindings(audioSettingsStore: AudioSettingsStore): Set
 
 internal fun formatVolumePercentage(volume: Float): String =
     "${(volume.normalizedAudioVolume() * 100).roundToInt()}%"
+
+private val SETTINGS_SCREEN_PREVIEW_AUDIO_SETTINGS = AudioSettings(
+    musicVolume = 0.4f,
+    soundEffectVolume = 0.7f,
+)
 
 @Composable
 internal fun SettingsScreen(
@@ -244,15 +250,13 @@ private fun SettingsScreenContentPreview() {
 @Preview
 @Composable
 private fun SettingsScreenPreview() {
+    val audioSettingsStore = remember {
+        AudioSettingsStore(InMemoryAudioSettingsStorage(SETTINGS_SCREEN_PREVIEW_AUDIO_SETTINGS))
+    }
+
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            CompositionLocalProvider(
-                LocalAudioSettingsStore provides AudioSettingsStore(
-                    InMemoryAudioSettingsStorage(
-                        AudioSettings(musicVolume = 0.4f, soundEffectVolume = 0.7f)
-                    )
-                )
-            ) {
+            CompositionLocalProvider(LocalAudioSettingsStore provides audioSettingsStore) {
                 SettingsScreen(
                     onBackToMenu = {},
                     animateClouds = false,

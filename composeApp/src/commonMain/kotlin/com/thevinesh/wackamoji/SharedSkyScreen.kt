@@ -20,6 +20,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+private val SHARED_SKY_CONTENT_MAX_WIDTH = 430.dp
+private const val STATIC_CLOUD_ALPHA = 0.7f
+private const val STATIC_CLOUD_CORNER_RADIUS_SCALE = 0.15f
+private val STATIC_CLOUD_LAYOUTS = listOf(
+    StaticCloudLayout(x = 0.08f, y = 0.04f, width = 0.25f, height = 0.03f),
+    StaticCloudLayout(x = 0.62f, y = 0.07f, width = 0.30f, height = 0.035f),
+    StaticCloudLayout(x = 0.15f, y = 0.14f, width = 0.20f, height = 0.025f),
+)
+
+private data class StaticCloudLayout(
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
+)
+
 @Composable
 internal fun SharedSkyScreen(
     modifier: Modifier = Modifier,
@@ -43,26 +59,26 @@ internal fun SharedSkyScreen(
             CloudsBackground()
         } else {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val cloudColor = WackAMojiColors.Cloud.copy(alpha = 0.7f)
+                val cloudColor = WackAMojiColors.Cloud.copy(alpha = STATIC_CLOUD_ALPHA)
 
                 fun drawCloud(x: Float, y: Float, width: Float, height: Float) {
                     drawRoundRect(
                         color = cloudColor,
                         topLeft = Offset(size.width * x, size.height * y),
                         size = Size(size.width * width, size.height * height),
-                        cornerRadius = CornerRadius(size.width * 0.15f)
+                        cornerRadius = CornerRadius(size.width * STATIC_CLOUD_CORNER_RADIUS_SCALE)
                     )
                 }
 
-                drawCloud(x = 0.08f, y = 0.04f, width = 0.25f, height = 0.03f)
-                drawCloud(x = 0.62f, y = 0.07f, width = 0.30f, height = 0.035f)
-                drawCloud(x = 0.15f, y = 0.14f, width = 0.20f, height = 0.025f)
+                STATIC_CLOUD_LAYOUTS.forEach { cloud ->
+                    drawCloud(x = cloud.x, y = cloud.y, width = cloud.width, height = cloud.height)
+                }
             }
         }
 
         Box(
             modifier = Modifier
-                .widthIn(max = 430.dp)
+                .widthIn(max = SHARED_SKY_CONTENT_MAX_WIDTH)
                 .fillMaxHeight(),
             content = content,
         )
