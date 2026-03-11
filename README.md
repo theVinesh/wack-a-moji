@@ -18,6 +18,12 @@ This project targets **Android** and **iOS**.
   - [`iosMain`](./composeApp/src/iosMain/kotlin) - iOS-specific expected/actual implementations.
 - [`/iosApp`](./iosApp/iosApp) - The iOS Xcode project and SwiftUI host application.
 
+## Sound Architecture
+
+- Looping background music is handled separately from one-shot sound effects.
+- Background music loops during gameplay, while hit/button sounds are fire-and-forget so they do not restart or interrupt the loop.
+- Audio assets are checked in once under `composeApp/src/androidMain/res/raw/`, and the build copies or renames those canonical files into the Android, iOS, and wasm/web packaging outputs.
+
 ## Getting Started
 
 ### Prerequisites
