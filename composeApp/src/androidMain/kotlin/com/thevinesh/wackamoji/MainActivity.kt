@@ -17,8 +17,14 @@ class MainActivity : ComponentActivity() {
             val backgroundMusicController = remember(applicationContext) {
                 AndroidBackgroundMusicController(applicationContext)
             }
+            val soundEffectPlayer = remember(applicationContext) {
+                AndroidSoundEffectPlayer(applicationContext)
+            }
 
-            App(backgroundMusicController = backgroundMusicController)
+            App(
+                backgroundMusicController = backgroundMusicController,
+                soundEffectPlayer = soundEffectPlayer,
+            )
         }
     }
 }

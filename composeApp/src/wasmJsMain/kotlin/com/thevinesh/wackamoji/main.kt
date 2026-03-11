@@ -15,9 +15,13 @@ fun main() {
     ComposeViewport(document.body!!) {
         val emojiFontFamily = FontFamily(Font(Res.font.NotoColorEmoji))
         val backgroundMusicController = remember { WasmBackgroundMusicController() }
+        val soundEffectPlayer = remember { WasmSoundEffectPlayer() }
 
         CompositionLocalProvider(LocalEmojiFont provides emojiFontFamily) {
-            App(backgroundMusicController = backgroundMusicController)
+            App(
+                backgroundMusicController = backgroundMusicController,
+                soundEffectPlayer = soundEffectPlayer,
+            )
             // Signal JS that fonts + UI are ready
             androidx.compose.runtime.LaunchedEffect(Unit) { dismissLoader() }
         }

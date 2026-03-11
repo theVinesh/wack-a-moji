@@ -118,6 +118,7 @@ data class GameUiState(
 class GameViewModel internal constructor(
     private val screenshotScenario: ScreenshotScenario? = null,
     private val backgroundMusicAutoplayEnabled: Boolean = screenshotScenario == null,
+    private val soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(initialGameUiState(screenshotScenario))
@@ -143,12 +144,17 @@ class GameViewModel internal constructor(
     // ── Actions ──────────────────────────────────────────────────────────────
 
     fun onMoleHit(index: Int) {
+        var scoredHit = false
         _uiState.update { state ->
             if (!state.cells[index] || state.gameOver) return@update state
+            scoredHit = true
             state.copy(
                 score = state.score + 1,
                 cells = state.cells.toMutableList().also { it[index] = false },
             )
+        }
+        if (scoredHit) {
+            soundEffectPlayer.play(SoundEffect.Wack)
         }
     }
 

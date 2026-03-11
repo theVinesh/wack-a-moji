@@ -4,6 +4,8 @@ import org.gradle.api.tasks.Copy
 
 private val githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
 private val canonicalBackgroundMusicSource = "src/androidMain/res/raw/loop.mp3"
+private val canonicalWackSoundEffectSource = "src/androidMain/res/raw/wack.mp3"
+private val canonicalClickSoundEffectSource = "src/androidMain/res/raw/click.mp3"
 private val generatedBackgroundMusicAndroidResDir = "generated/backgroundMusic/android/res"
 private val generatedBackgroundMusicAndroidDir = "$generatedBackgroundMusicAndroidResDir/raw"
 private val generatedBackgroundMusicIosDir = "generated/backgroundMusic/ios"
@@ -146,13 +148,35 @@ val copyCanonicalBackgroundMusicForAndroid by tasks.registering(Copy::class) {
     into(layout.buildDirectory.dir(generatedBackgroundMusicAndroidDir))
 }
 
+val copyCanonicalWackSoundEffectForAndroid by tasks.registering(Copy::class) {
+    group = "audio"
+    description = "Copies the canonical wack.mp3 into the generated Android raw resource directory."
+
+    from(layout.projectDirectory.file(canonicalWackSoundEffectSource))
+    into(layout.buildDirectory.dir(generatedBackgroundMusicAndroidDir))
+}
+
+val copyCanonicalClickSoundEffectForAndroid by tasks.registering(Copy::class) {
+    group = "audio"
+    description = "Copies the canonical click.mp3 into the generated Android raw resource directory."
+
+    from(layout.projectDirectory.file(canonicalClickSoundEffectSource))
+    into(layout.buildDirectory.dir(generatedBackgroundMusicAndroidDir))
+}
+
 val copyAndroidResourcesForPackaging by tasks.registering(Copy::class) {
     group = "audio"
-    description = "Copies Android packaging resources into the generated directory while sourcing loop.mp3 from the canonical asset."
+    description = "Copies Android packaging resources into the generated directory while sourcing loop.mp3, wack.mp3, and click.mp3 from canonical assets."
 
-    dependsOn(copyCanonicalBackgroundMusicForAndroid)
+    dependsOn(
+        copyCanonicalBackgroundMusicForAndroid,
+        copyCanonicalWackSoundEffectForAndroid,
+        copyCanonicalClickSoundEffectForAndroid,
+    )
     from(layout.projectDirectory.dir("src/androidMain/res")) {
         exclude("raw/loop.mp3")
+        exclude("raw/wack.mp3")
+        exclude("raw/click.mp3")
     }
     into(layout.buildDirectory.dir(generatedBackgroundMusicAndroidResDir))
 }
@@ -166,6 +190,22 @@ val copyCanonicalBackgroundMusicForIos by tasks.registering(Copy::class) {
     rename { "background-music-loop.mp3" }
 }
 
+val copyCanonicalWackSoundEffectForIos by tasks.registering(Copy::class) {
+    group = "audio"
+    description = "Copies the canonical wack.mp3 into the generated iOS bundle-resource staging directory."
+
+    from(layout.projectDirectory.file(canonicalWackSoundEffectSource))
+    into(layout.buildDirectory.dir(generatedBackgroundMusicIosDir))
+}
+
+val copyCanonicalClickSoundEffectForIos by tasks.registering(Copy::class) {
+    group = "audio"
+    description = "Copies the canonical click.mp3 into the generated iOS bundle-resource staging directory."
+
+    from(layout.projectDirectory.file(canonicalClickSoundEffectSource))
+    into(layout.buildDirectory.dir(generatedBackgroundMusicIosDir))
+}
+
 val copyCanonicalBackgroundMusicForWasm by tasks.registering(Copy::class) {
     group = "audio"
     description = "Copies the canonical loop.mp3 into the generated wasm/web resource staging directory."
@@ -173,6 +213,22 @@ val copyCanonicalBackgroundMusicForWasm by tasks.registering(Copy::class) {
     from(layout.projectDirectory.file(canonicalBackgroundMusicSource))
     into(layout.buildDirectory.dir(generatedBackgroundMusicWasmDir))
     rename { "background-music-loop.mp3" }
+}
+
+val copyCanonicalWackSoundEffectForWasm by tasks.registering(Copy::class) {
+    group = "audio"
+    description = "Copies the canonical wack.mp3 into the generated wasm/web resource staging directory."
+
+    from(layout.projectDirectory.file(canonicalWackSoundEffectSource))
+    into(layout.buildDirectory.dir(generatedBackgroundMusicWasmDir))
+}
+
+val copyCanonicalClickSoundEffectForWasm by tasks.registering(Copy::class) {
+    group = "audio"
+    description = "Copies the canonical click.mp3 into the generated wasm/web resource staging directory."
+
+    from(layout.projectDirectory.file(canonicalClickSoundEffectSource))
+    into(layout.buildDirectory.dir(generatedBackgroundMusicWasmDir))
 }
 
 tasks.register("prepareBackgroundMusicBuildCopies") {
@@ -186,10 +242,28 @@ tasks.register("prepareBackgroundMusicBuildCopies") {
     )
 }
 
+tasks.register("prepareSoundEffectBuildCopies") {
+    group = "audio"
+    description = "Stages generated one-shot sound-effect copies for Android, iOS, and wasm/web packaging from the canonical wack.mp3 and click.mp3 sources."
+
+    dependsOn(
+        copyCanonicalWackSoundEffectForAndroid,
+        copyCanonicalClickSoundEffectForAndroid,
+        copyCanonicalWackSoundEffectForIos,
+        copyCanonicalClickSoundEffectForIos,
+        copyCanonicalWackSoundEffectForWasm,
+        copyCanonicalClickSoundEffectForWasm,
+    )
+}
+
 tasks.named("preBuild") {
     dependsOn(copyAndroidResourcesForPackaging)
 }
 
 tasks.matching { it.name.startsWith("wasmJs") && it.name.contains("ProcessResources") }.configureEach {
-    dependsOn(copyCanonicalBackgroundMusicForWasm)
+    dependsOn(
+        copyCanonicalBackgroundMusicForWasm,
+        copyCanonicalWackSoundEffectForWasm,
+        copyCanonicalClickSoundEffectForWasm,
+    )
 }

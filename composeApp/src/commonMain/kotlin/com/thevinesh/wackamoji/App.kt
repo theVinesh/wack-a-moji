@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +28,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /** Provides the emoji FontFamily throughout the app. On mobile this is null (system handles emojis natively). */
 val LocalEmojiFont = compositionLocalOf<FontFamily?> { null }
+val LocalSoundEffectPlayer = compositionLocalOf<SoundEffectPlayer> { NoOpSoundEffectPlayer }
 
 internal enum class AppScreen {
     Menu,
@@ -43,16 +45,21 @@ internal fun appScreenAfterBackToMenu(): AppScreen = AppScreen.Menu
 @Composable
 @Preview
 fun App() {
-    App(backgroundMusicController = NoOpBackgroundMusicController)
+    App(
+        backgroundMusicController = NoOpBackgroundMusicController,
+        soundEffectPlayer = NoOpSoundEffectPlayer,
+    )
 }
 
 @Composable
 fun App(
     backgroundMusicController: BackgroundMusicController,
+    soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
 ) {
     App(
         screenshotScenario = null,
         backgroundMusicController = backgroundMusicController,
+        soundEffectPlayer = soundEffectPlayer,
     )
 }
 
@@ -60,22 +67,30 @@ fun App(
 internal fun App(
     screenshotScenario: ScreenshotScenario?,
     backgroundMusicController: BackgroundMusicController = NoOpBackgroundMusicController,
+    soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
 ) {
     var appScreen by remember { mutableStateOf(initialAppScreen(screenshotScenario)) }
 
-    MaterialTheme {
-        when (appScreen) {
-            AppScreen.Menu -> GameMenuScreen(
-                onStartGame = { appScreen = appScreenAfterStartGame() },
-                onLeaderboard = {},
-                onSettings = {},
-            )
+    DisposableEffect(soundEffectPlayer) {
+        onDispose { soundEffectPlayer.dispose() }
+    }
 
-            AppScreen.Gameplay -> GameplayAppScreen(
-                screenshotScenario = screenshotScenario,
-                backgroundMusicController = backgroundMusicController,
-                onBack = { appScreen = appScreenAfterBackToMenu() },
-            )
+    CompositionLocalProvider(LocalSoundEffectPlayer provides soundEffectPlayer) {
+        MaterialTheme {
+            when (appScreen) {
+                AppScreen.Menu -> GameMenuScreen(
+                    onStartGame = { appScreen = appScreenAfterStartGame() },
+                    onLeaderboard = {},
+                    onSettings = {},
+                )
+
+                AppScreen.Gameplay -> GameplayAppScreen(
+                    screenshotScenario = screenshotScenario,
+                    backgroundMusicController = backgroundMusicController,
+                    soundEffectPlayer = soundEffectPlayer,
+                    onBack = { appScreen = appScreenAfterBackToMenu() },
+                )
+            }
         }
     }
 }
@@ -84,6 +99,7 @@ internal fun App(
 private fun GameplayAppScreen(
     screenshotScenario: ScreenshotScenario?,
     backgroundMusicController: BackgroundMusicController,
+    soundEffectPlayer: SoundEffectPlayer,
     onBack: () -> Unit,
 ) {
     val gameplayViewModelStoreOwner = remember {
@@ -101,6 +117,7 @@ private fun GameplayAppScreen(
         GameViewModel(
             screenshotScenario = screenshotScenario,
             backgroundMusicAutoplayEnabled = backgroundMusicAutoplayEnabled,
+            soundEffectPlayer = soundEffectPlayer,
         )
     }
     val state by gameViewModel.uiState.collectAsState()

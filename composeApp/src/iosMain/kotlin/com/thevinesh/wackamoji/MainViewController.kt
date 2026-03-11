@@ -8,11 +8,13 @@ fun MainViewController() = MainViewController(screenshotScenarioName = null)
 fun MainViewController(screenshotScenarioName: String?): UIViewController {
     val screenshotScenario = screenshotScenarioFromLaunchValue(screenshotScenarioName)
     val backgroundMusicController = IosBackgroundMusicController()
+    val soundEffectPlayer = IosSoundEffectPlayer()
 
     return ComposeUIViewController {
         App(
             screenshotScenario = screenshotScenario,
             backgroundMusicController = backgroundMusicController,
+            soundEffectPlayer = soundEffectPlayer,
         )
     }
 }

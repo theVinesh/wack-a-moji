@@ -260,6 +260,45 @@
             };
         })();
 
+        (() => {
+            const activeEffects = new Set();
+
+            function cleanup(audio) {
+                activeEffects.delete(audio);
+                audio.onended = null;
+                audio.onerror = null;
+            }
+
+            window.wackAMojiSoundEffects = {
+                play(resourcePath) {
+                    if (document.visibilityState === 'hidden') {
+                        return;
+                    }
+
+                    const audio = new Audio(resourcePath);
+                    audio.preload = 'auto';
+                    audio.loop = false;
+                    audio.onended = () => cleanup(audio);
+                    audio.onerror = () => cleanup(audio);
+                    activeEffects.add(audio);
+
+                    const playPromise = audio.play();
+                    if (playPromise && typeof playPromise.catch === 'function') {
+                        playPromise.catch(() => {
+                            audio.pause();
+                            cleanup(audio);
+                        });
+                    }
+                },
+                dispose() {
+                    [...activeEffects].forEach((audio) => {
+                        audio.pause();
+                        cleanup(audio);
+                    });
+                },
+            };
+        })();
+
         // Loader dismissal logic
         // Called from Kotlin/Wasm once the game is ready (fonts loaded)
         window.onAppReady = function () {

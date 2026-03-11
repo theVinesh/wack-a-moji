@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wackamoji-cache-v1';
+const CACHE_NAME = 'wackamoji-cache-v2';
 const FONT_CACHE_NAME = 'wackamoji-font-v1';
 
 // App shell resources to cache immediately on install
@@ -7,6 +7,7 @@ const APP_SHELL = [
     './index.html',
     './composeApp.js',
     './background-music-loop.mp3',
+    './wack.mp3',
     './manifest.json',
     './favicon.ico',
     './icon-192.png',

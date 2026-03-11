@@ -268,10 +268,58 @@ class GameViewModelTest {
 
     @Test
     fun onMoleHit_doesNothingWhenNoCellIsUp() {
-        val vm = GameViewModel()
+        val player = RecordingSoundEffectPlayer()
+        val vm = GameViewModel(soundEffectPlayer = player)
         // At initial state, all cells are down
         vm.onMoleHit(0)
         assertEquals(0, vm.uiState.value.score)
+        assertTrue(player.playedEffects.isEmpty())
+    }
+
+    @Test
+    fun onMoleHit_visibleMoleIncrementsScore_andPlaysWackOnce() {
+        val player = RecordingSoundEffectPlayer()
+        val vm = GameViewModel(
+            screenshotScenario = ScreenshotScenario.Gameplay,
+            soundEffectPlayer = player,
+        )
+        val initialBackgroundMusicPlayback = vm.backgroundMusicState.value.playback
+
+        vm.onMoleHit(2)
+
+        assertEquals(13, vm.uiState.value.score)
+        assertFalse(vm.uiState.value.cells[2])
+        assertEquals(listOf(SoundEffect.Wack), player.playedEffects)
+        assertEquals(initialBackgroundMusicPlayback, vm.backgroundMusicState.value.playback)
+    }
+
+    @Test
+    fun onMoleHit_hiddenCellDoesNotPlayWack() {
+        val player = RecordingSoundEffectPlayer()
+        val vm = GameViewModel(
+            screenshotScenario = ScreenshotScenario.Gameplay,
+            soundEffectPlayer = player,
+        )
+
+        vm.onMoleHit(0)
+
+        assertEquals(screenshotStateForScenario(ScreenshotScenario.Gameplay), vm.uiState.value)
+        assertTrue(player.playedEffects.isEmpty())
+    }
+
+    @Test
+    fun onMoleHit_afterGameOverDoesNotPlayWack() {
+        val player = RecordingSoundEffectPlayer()
+        val vm = GameViewModel(
+            screenshotScenario = ScreenshotScenario.GameOver,
+            soundEffectPlayer = player,
+        )
+
+        vm.onMoleHit(0)
+
+        assertEquals(32, vm.uiState.value.score)
+        assertTrue(vm.uiState.value.gameOver)
+        assertTrue(player.playedEffects.isEmpty())
     }
 
     @Test
@@ -314,5 +362,15 @@ class GameViewModelTest {
                 desiredState = playingState.copy(playback = BackgroundMusicPlayback.Stopped),
             ),
         )
+    }
+
+    private class RecordingSoundEffectPlayer : SoundEffectPlayer {
+        val playedEffects = mutableListOf<SoundEffect>()
+
+        override fun play(effect: SoundEffect) {
+            playedEffects += effect
+        }
+
+        override fun dispose() = Unit
     }
 }

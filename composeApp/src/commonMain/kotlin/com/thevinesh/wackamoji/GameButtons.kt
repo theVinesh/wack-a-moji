@@ -25,6 +25,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+internal fun buttonClickHandler(
+    soundEffectPlayer: SoundEffectPlayer,
+    onClick: () -> Unit,
+): () -> Unit = {
+    soundEffectPlayer.play(SoundEffect.Click)
+    onClick()
+}
+
 @Composable
 internal fun ButtonsRow(
     onBack: () -> Unit,
@@ -51,6 +59,11 @@ internal fun GameButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val soundEffectPlayer = LocalSoundEffectPlayer.current
+    val onButtonClick = remember(soundEffectPlayer, onClick) {
+        buttonClickHandler(soundEffectPlayer = soundEffectPlayer, onClick = onClick)
+    }
+
     // 3D push-style button
     Box(
         modifier = modifier
@@ -59,7 +72,7 @@ internal fun GameButton(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = onClick
+                onClick = onButtonClick
             )
     ) {
         // Shadow layer (offset below)

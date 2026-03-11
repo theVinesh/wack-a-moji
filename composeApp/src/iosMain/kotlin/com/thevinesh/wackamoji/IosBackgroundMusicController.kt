@@ -38,14 +38,7 @@ internal class IosBackgroundMusicController : BackgroundMusicController {
     private fun createPlayer(track: BackgroundMusicTrack, loop: Boolean): AVAudioPlayer? {
         val resourceUrl = bundledResourceUrl(track) ?: return null
 
-        return memScoped {
-            val error = alloc<ObjCObjectVar<NSError?>>()
-
-            AVAudioPlayer(contentsOfURL = resourceUrl, error = error.ptr).apply {
-                numberOfLoops = if (loop) -1 else 0
-                prepareToPlay()
-            }
-        }
+        return createAudioPlayer(resourceUrl, loop)
     }
 }
 
@@ -54,6 +47,20 @@ private fun bundledResourceUrl(track: BackgroundMusicTrack): NSURL? {
         BackgroundMusicTrack.GameplayLoop -> IOS_GAMEPLAY_LOOP_RESOURCE_NAME to IOS_GAMEPLAY_LOOP_RESOURCE_EXTENSION
     }
 
+    return bundledResourceUrl(resourceName, resourceExtension)
+}
+
+@OptIn(ExperimentalForeignApi::class)
+internal fun createAudioPlayer(resourceUrl: NSURL, loop: Boolean): AVAudioPlayer? = memScoped {
+    val error = alloc<ObjCObjectVar<NSError?>>()
+
+    AVAudioPlayer(contentsOfURL = resourceUrl, error = error.ptr).apply {
+        numberOfLoops = if (loop) -1 else 0
+        prepareToPlay()
+    }
+}
+
+internal fun bundledResourceUrl(resourceName: String, resourceExtension: String): NSURL? {
     return NSBundle.mainBundle.URLForResource(
         name = resourceName,
         withExtension = resourceExtension,
