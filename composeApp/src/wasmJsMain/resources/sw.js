@@ -6,7 +6,7 @@ const APP_SHELL = [
     './',
     './index.html',
     './composeApp.js',
-    './composeApp.wasm',
+    './background-music-loop.mp3',
     './manifest.json',
     './favicon.ico',
     './icon-192.png',

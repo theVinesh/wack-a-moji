@@ -146,6 +146,120 @@
             });
         }
 
+        (() => {
+            const interactionEvents = ['pointerdown', 'keydown', 'touchstart'];
+            const state = {
+                element: null,
+                interactionListenerActive: false,
+                loop: true,
+                resourcePath: null,
+                shouldPlay: false,
+            };
+
+            function ensureAudio(resourcePath) {
+                if (!state.element || state.resourcePath !== resourcePath) {
+                    if (state.element) {
+                        state.element.pause();
+                    }
+                    state.element = new Audio(resourcePath);
+                    state.element.preload = 'auto';
+                    state.resourcePath = resourcePath;
+                }
+
+                state.element.loop = state.loop;
+                return state.element;
+            }
+
+            function removeInteractionListeners() {
+                if (!state.interactionListenerActive) {
+                    return;
+                }
+
+                interactionEvents.forEach((eventName) => {
+                    document.removeEventListener(eventName, handleInteraction);
+                });
+                state.interactionListenerActive = false;
+            }
+
+            function installInteractionListeners() {
+                if (state.interactionListenerActive) {
+                    return;
+                }
+
+                interactionEvents.forEach((eventName) => {
+                    document.addEventListener(eventName, handleInteraction, { passive: true });
+                });
+                state.interactionListenerActive = true;
+            }
+
+            function handleInteraction() {
+                removeInteractionListeners();
+                tryPlay();
+            }
+
+            function tryPlay() {
+                const audio = state.element;
+                if (!audio || !state.shouldPlay || document.visibilityState === 'hidden') {
+                    return;
+                }
+
+                audio.loop = state.loop;
+                const playPromise = audio.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise
+                        .then(() => {
+                            removeInteractionListeners();
+                        })
+                        .catch(() => {
+                            installInteractionListeners();
+                        });
+                }
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (!state.element) {
+                    return;
+                }
+
+                if (document.visibilityState === 'hidden') {
+                    state.element.pause();
+                    return;
+                }
+
+                if (state.shouldPlay) {
+                    tryPlay();
+                }
+            });
+
+            window.wackAMojiBackgroundMusic = {
+                start(resourcePath, loop) {
+                    state.shouldPlay = true;
+                    state.loop = loop;
+                    const audio = ensureAudio(resourcePath);
+                    audio.currentTime = 0;
+                    tryPlay();
+                },
+                pause() {
+                    state.shouldPlay = false;
+                    if (state.element) {
+                        state.element.pause();
+                    }
+                },
+                resume() {
+                    state.shouldPlay = true;
+                    tryPlay();
+                },
+                stop() {
+                    state.shouldPlay = false;
+                    removeInteractionListeners();
+                    if (state.element) {
+                        state.element.pause();
+                        state.element.currentTime = 0;
+                    }
+                },
+            };
+        })();
+
         // Loader dismissal logic
         // Called from Kotlin/Wasm once the game is ready (fonts loaded)
         window.onAppReady = function () {

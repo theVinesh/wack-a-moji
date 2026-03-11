@@ -1,6 +1,7 @@
 package com.thevinesh.wackamoji
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.window.ComposeViewport
@@ -13,8 +14,10 @@ import wackamole.composeapp.generated.resources.Res
 fun main() {
     ComposeViewport(document.body!!) {
         val emojiFontFamily = FontFamily(Font(Res.font.NotoColorEmoji))
+        val backgroundMusicController = remember { WasmBackgroundMusicController() }
+
         CompositionLocalProvider(LocalEmojiFont provides emojiFontFamily) {
-            App()
+            App(backgroundMusicController = backgroundMusicController)
             // Signal JS that fonts + UI are ready
             androidx.compose.runtime.LaunchedEffect(Unit) { dismissLoader() }
         }

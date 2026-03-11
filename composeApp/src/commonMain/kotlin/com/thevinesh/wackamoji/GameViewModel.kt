@@ -83,6 +83,22 @@ internal fun screenshotStateForScenario(scenario: ScreenshotScenario): GameUiSta
 private fun initialGameUiState(screenshotScenario: ScreenshotScenario?): GameUiState =
     screenshotScenario?.let(::screenshotStateForScenario) ?: GameUiState()
 
+private fun shouldAutoplayBackgroundMusic(
+    screenshotScenario: ScreenshotScenario?,
+    backgroundMusicAutoplayEnabled: Boolean,
+): Boolean = screenshotScenario == null && backgroundMusicAutoplayEnabled
+
+private fun initialBackgroundMusicState(
+    screenshotScenario: ScreenshotScenario?,
+    backgroundMusicAutoplayEnabled: Boolean,
+): BackgroundMusicState {
+    return if (shouldAutoplayBackgroundMusic(screenshotScenario, backgroundMusicAutoplayEnabled)) {
+        BackgroundMusicState(playback = BackgroundMusicPlayback.Playing)
+    } else {
+        BackgroundMusicState()
+    }
+}
+
 // ─── UI State ────────────────────────────────────────────────────────────────
 
 data class GameUiState(
@@ -101,10 +117,19 @@ data class GameUiState(
 
 class GameViewModel internal constructor(
     private val screenshotScenario: ScreenshotScenario? = null,
+    private val backgroundMusicAutoplayEnabled: Boolean = screenshotScenario == null,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(initialGameUiState(screenshotScenario))
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
+
+    private val _backgroundMusicState = MutableStateFlow(
+        initialBackgroundMusicState(
+            screenshotScenario = screenshotScenario,
+            backgroundMusicAutoplayEnabled = backgroundMusicAutoplayEnabled,
+        )
+    )
+    val backgroundMusicState: StateFlow<BackgroundMusicState> = _backgroundMusicState.asStateFlow()
 
     private var timerJob: Job? = null
     private var spawnJob: Job? = null
@@ -153,7 +178,37 @@ class GameViewModel internal constructor(
         }
     }
 
+    fun onAppForegrounded() {
+        updateBackgroundMusicPlayback(BackgroundMusicPlayback.Playing)
+    }
+
+    fun onAppBackgrounded() {
+        updateBackgroundMusicPlayback(BackgroundMusicPlayback.Paused)
+    }
+
+    override fun onCleared() {
+        stopGameLoops()
+        _backgroundMusicState.value = _backgroundMusicState.value.copy(
+            playback = BackgroundMusicPlayback.Stopped,
+        )
+        super.onCleared()
+    }
+
     // ── Internal loops ───────────────────────────────────────────────────────
+
+    private fun updateBackgroundMusicPlayback(playback: BackgroundMusicPlayback) {
+        if (!shouldAutoplayBackgroundMusic(screenshotScenario, backgroundMusicAutoplayEnabled)) {
+            return
+        }
+
+        _backgroundMusicState.update { state ->
+            if (state.playback == playback) {
+                state
+            } else {
+                state.copy(playback = playback)
+            }
+        }
+    }
 
     private fun startGameLoops() {
         stopGameLoops()

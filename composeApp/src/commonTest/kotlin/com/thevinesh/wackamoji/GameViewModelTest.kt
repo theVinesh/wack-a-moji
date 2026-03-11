@@ -3,7 +3,10 @@ package com.thevinesh.wackamoji
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -192,6 +195,9 @@ class GameViewModelTest {
         assertTrue(state.running)
         assertEquals(GAME_DURATION_SECONDS, state.timeLeft)
         assertFalse(state.gameOver)
+        assertEquals(BackgroundMusicPlayback.Playing, vm.backgroundMusicState.value.playback)
+        assertEquals(BackgroundMusicTrack.GameplayLoop, vm.backgroundMusicState.value.track)
+        assertTrue(vm.backgroundMusicState.value.loop)
     }
 
     @Test
@@ -199,6 +205,18 @@ class GameViewModelTest {
         val vm = GameViewModel(ScreenshotScenario.GameOver)
 
         assertEquals(screenshotStateForScenario(ScreenshotScenario.GameOver), vm.uiState.value)
+        assertEquals(BackgroundMusicPlayback.Stopped, vm.backgroundMusicState.value.playback)
+    }
+
+    @Test
+    fun viewModel_backgroundMusicCanBeDisabledForPreviewLikeScenarios() {
+        val vm = GameViewModel(backgroundMusicAutoplayEnabled = false)
+
+        assertEquals(BackgroundMusicPlayback.Stopped, vm.backgroundMusicState.value.playback)
+
+        vm.onAppForegrounded()
+
+        assertEquals(BackgroundMusicPlayback.Stopped, vm.backgroundMusicState.value.playback)
     }
 
     // ─── GameViewModel.onPauseResume ─────────────────────────────────────────
@@ -212,6 +230,20 @@ class GameViewModelTest {
         assertFalse(vm.uiState.value.running)
 
         vm.onPauseResume()
+        assertTrue(vm.uiState.value.running)
+        assertEquals(BackgroundMusicPlayback.Playing, vm.backgroundMusicState.value.playback)
+    }
+
+    @Test
+    fun appBackgrounding_pausesAndResumesBackgroundMusicWithoutChangingGamePauseState() {
+        val vm = GameViewModel()
+
+        vm.onAppBackgrounded()
+        assertEquals(BackgroundMusicPlayback.Paused, vm.backgroundMusicState.value.playback)
+        assertTrue(vm.uiState.value.running)
+
+        vm.onAppForegrounded()
+        assertEquals(BackgroundMusicPlayback.Playing, vm.backgroundMusicState.value.playback)
         assertTrue(vm.uiState.value.running)
     }
 
@@ -229,6 +261,7 @@ class GameViewModelTest {
         assertEquals(GAME_DURATION_SECONDS, state.timeLeft)
         assertFalse(state.gameOver)
         assertTrue(state.running)
+        assertEquals(BackgroundMusicPlayback.Playing, vm.backgroundMusicState.value.playback)
     }
 
     // ─── GameViewModel.onMoleHit ─────────────────────────────────────────────
@@ -239,5 +272,47 @@ class GameViewModelTest {
         // At initial state, all cells are down
         vm.onMoleHit(0)
         assertEquals(0, vm.uiState.value.score)
+    }
+
+    @Test
+    fun gameOver_doesNotInterruptBackgroundMusic() = runTest(testDispatcher.scheduler) {
+        val vm = GameViewModel()
+
+        advanceTimeBy(GAME_DURATION_SECONDS * 1000L)
+        runCurrent()
+
+        assertTrue(vm.uiState.value.gameOver)
+        assertEquals(BackgroundMusicPlayback.Playing, vm.backgroundMusicState.value.playback)
+    }
+
+    @Test
+    fun resolveBackgroundMusicAction_mapsPlaybackTransitions() {
+        val playingState = BackgroundMusicState(playback = BackgroundMusicPlayback.Playing)
+
+        assertEquals(
+            BackgroundMusicAction.Start(BackgroundMusicTrack.GameplayLoop, loop = true),
+            resolveBackgroundMusicAction(previousState = null, desiredState = playingState),
+        )
+        assertEquals(
+            BackgroundMusicAction.Pause,
+            resolveBackgroundMusicAction(
+                previousState = playingState,
+                desiredState = playingState.copy(playback = BackgroundMusicPlayback.Paused),
+            ),
+        )
+        assertEquals(
+            BackgroundMusicAction.Resume,
+            resolveBackgroundMusicAction(
+                previousState = playingState.copy(playback = BackgroundMusicPlayback.Paused),
+                desiredState = playingState,
+            ),
+        )
+        assertEquals(
+            BackgroundMusicAction.Stop,
+            resolveBackgroundMusicAction(
+                previousState = playingState,
+                desiredState = playingState.copy(playback = BackgroundMusicPlayback.Stopped),
+            ),
+        )
     }
 }

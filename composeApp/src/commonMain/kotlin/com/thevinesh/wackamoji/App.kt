@@ -17,6 +17,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStore
@@ -42,11 +43,24 @@ internal fun appScreenAfterBackToMenu(): AppScreen = AppScreen.Menu
 @Composable
 @Preview
 fun App() {
-    App(screenshotScenario = null)
+    App(backgroundMusicController = NoOpBackgroundMusicController)
 }
 
 @Composable
-internal fun App(screenshotScenario: ScreenshotScenario?) {
+fun App(
+    backgroundMusicController: BackgroundMusicController,
+) {
+    App(
+        screenshotScenario = null,
+        backgroundMusicController = backgroundMusicController,
+    )
+}
+
+@Composable
+internal fun App(
+    screenshotScenario: ScreenshotScenario?,
+    backgroundMusicController: BackgroundMusicController = NoOpBackgroundMusicController,
+) {
     var appScreen by remember { mutableStateOf(initialAppScreen(screenshotScenario)) }
 
     MaterialTheme {
@@ -59,6 +73,7 @@ internal fun App(screenshotScenario: ScreenshotScenario?) {
 
             AppScreen.Gameplay -> GameplayAppScreen(
                 screenshotScenario = screenshotScenario,
+                backgroundMusicController = backgroundMusicController,
                 onBack = { appScreen = appScreenAfterBackToMenu() },
             )
         }
@@ -68,6 +83,7 @@ internal fun App(screenshotScenario: ScreenshotScenario?) {
 @Composable
 private fun GameplayAppScreen(
     screenshotScenario: ScreenshotScenario?,
+    backgroundMusicController: BackgroundMusicController,
     onBack: () -> Unit,
 ) {
     val gameplayViewModelStoreOwner = remember {
@@ -80,10 +96,22 @@ private fun GameplayAppScreen(
         onDispose { gameplayViewModelStoreOwner.viewModelStore.clear() }
     }
 
+    val backgroundMusicAutoplayEnabled = !LocalInspectionMode.current && screenshotScenario == null
     val gameViewModel = viewModel(viewModelStoreOwner = gameplayViewModelStoreOwner) {
-        GameViewModel(screenshotScenario)
+        GameViewModel(
+            screenshotScenario = screenshotScenario,
+            backgroundMusicAutoplayEnabled = backgroundMusicAutoplayEnabled,
+        )
     }
     val state by gameViewModel.uiState.collectAsState()
+    val backgroundMusicState by gameViewModel.backgroundMusicState.collectAsState()
+
+    BindBackgroundMusic(
+        controller = backgroundMusicController,
+        desiredState = backgroundMusicState,
+        onAppForegrounded = gameViewModel::onAppForegrounded,
+        onAppBackgrounded = gameViewModel::onAppBackgrounded,
+    )
 
     Box(
         modifier = Modifier.fillMaxSize(),
