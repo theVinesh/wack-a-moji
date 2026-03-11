@@ -7,19 +7,37 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /** Provides the emoji FontFamily throughout the app. On mobile this is null (system handles emojis natively). */
 val LocalEmojiFont = compositionLocalOf<FontFamily?> { null }
+
+internal enum class AppScreen {
+    Menu,
+    Gameplay,
+}
+
+internal fun initialAppScreen(screenshotScenario: ScreenshotScenario?): AppScreen =
+    if (screenshotScenario == null) AppScreen.Menu else AppScreen.Gameplay
+
+internal fun appScreenAfterStartGame(): AppScreen = AppScreen.Gameplay
+
+internal fun appScreenAfterBackToMenu(): AppScreen = AppScreen.Menu
 
 @Composable
 @Preview
@@ -29,43 +47,79 @@ fun App() {
 
 @Composable
 internal fun App(screenshotScenario: ScreenshotScenario?) {
-    val gameViewModel = viewModel { GameViewModel(screenshotScenario) }
-    val state by gameViewModel.uiState.collectAsState()
+    var appScreen by remember { mutableStateOf(initialAppScreen(screenshotScenario)) }
 
     MaterialTheme {
+        when (appScreen) {
+            AppScreen.Menu -> GameMenuScreen(
+                onStartGame = { appScreen = appScreenAfterStartGame() },
+                onLeaderboard = {},
+                onSettings = {},
+            )
+
+            AppScreen.Gameplay -> GameplayAppScreen(
+                screenshotScenario = screenshotScenario,
+                onBack = { appScreen = appScreenAfterBackToMenu() },
+            )
+        }
+    }
+}
+
+@Composable
+private fun GameplayAppScreen(
+    screenshotScenario: ScreenshotScenario?,
+    onBack: () -> Unit,
+) {
+    val gameplayViewModelStoreOwner = remember {
+        object : ViewModelStoreOwner {
+            override val viewModelStore = ViewModelStore()
+        }
+    }
+
+    DisposableEffect(gameplayViewModelStoreOwner) {
+        onDispose { gameplayViewModelStoreOwner.viewModelStore.clear() }
+    }
+
+    val gameViewModel = viewModel(viewModelStoreOwner = gameplayViewModelStoreOwner) {
+        GameViewModel(screenshotScenario)
+    }
+    val state by gameViewModel.uiState.collectAsState()
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        // Sky gradient — fills entire screen
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(WackAMojiColors.SkyTop, WackAMojiColors.SkyBottom)
+                )
+            )
+        }
+
+        // Clouds — fill entire screen
+        CloudsBackground()
+
+        // Game content — centered, phone-width
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .widthIn(max = 430.dp)
+                .fillMaxHeight(),
         ) {
-            // Sky gradient — fills entire screen
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(WackAMojiColors.SkyTop, WackAMojiColors.SkyBottom)
-                    )
-                )
-            }
+            GameScreen(
+                viewModel = gameViewModel,
+                onBack = onBack,
+            )
+        }
 
-            // Clouds — fill entire screen
-            CloudsBackground()
-
-            // Game content — centered, phone-width
-            Box(
-                modifier = Modifier
-                    .widthIn(max = 430.dp)
-                    .fillMaxHeight(),
-            ) {
-                GameScreen(viewModel = gameViewModel)
-            }
-
-            // Game Over overlay — fills entire screen
-            if (state.gameOver) {
-                GameOverOverlay(
-                    score = state.score,
-                    level = state.level,
-                    onRestart = { gameViewModel.onRestart() },
-                )
-            }
+        // Game Over overlay — fills entire screen
+        if (state.gameOver) {
+            GameOverOverlay(
+                score = state.score,
+                level = state.level,
+                onRestart = { gameViewModel.onRestart() },
+            )
         }
     }
 }

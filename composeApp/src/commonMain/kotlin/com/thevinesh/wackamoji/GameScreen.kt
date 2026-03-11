@@ -19,7 +19,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-fun GameScreen(viewModel: GameViewModel = viewModel { GameViewModel() }) {
+fun GameScreen(
+    viewModel: GameViewModel = viewModel { GameViewModel() },
+    onBack: () -> Unit = {},
+) {
     val state by viewModel.uiState.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -58,9 +61,7 @@ fun GameScreen(viewModel: GameViewModel = viewModel { GameViewModel() }) {
 
             // Action buttons
             ButtonsRow(
-                running = state.running,
-                onRestart = { viewModel.onRestart() },
-                onPauseResume = { viewModel.onPauseResume() },
+                onBack = onBack,
             )
 
             Spacer(modifier = Modifier.height(32.dp))

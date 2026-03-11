@@ -27,26 +27,17 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 internal fun ButtonsRow(
-    running: Boolean,
-    onRestart: () -> Unit,
-    onPauseResume: () -> Unit,
+    onBack: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
     ) {
         GameButton(
-            text = "RESTART",
+            text = "Back",
             backgroundColor = WackAMojiColors.RestartOrange,
             shadowColor = WackAMojiColors.RestartShadow,
-            onClick = onRestart,
-            modifier = Modifier.weight(1f)
-        )
-        GameButton(
-            text = if (running) "PAUSE" else "RESUME",
-            backgroundColor = WackAMojiColors.PauseGreen,
-            shadowColor = WackAMojiColors.PauseShadow,
-            onClick = onPauseResume,
+            onClick = onBack,
             modifier = Modifier.weight(1f)
         )
     }
@@ -102,7 +93,7 @@ internal fun GameButton(
 @org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 private fun ButtonsRowPreview() {
-    MaterialTheme { Surface { ButtonsRow(running = true, onRestart = {}, onPauseResume = {}) } }
+    MaterialTheme { Surface { ButtonsRow(onBack = {}) } }
 }
 
 @org.jetbrains.compose.ui.tooling.preview.Preview

@@ -28,6 +28,8 @@ object WackAMojiColors {
     // Buttons
     val RestartOrange = Color(0xFFFB8500)
     val RestartShadow = Color(0xFFD35400)
+    val LeaderboardPurple = Color(0xFF7C3AED)
+    val LeaderboardShadow = Color(0xFF5B21B6)
     val PauseGreen = Color(0xFF8BC34A)
     val PauseShadow = Color(0xFF689F38)
     val ButtonHighlight = Color(0x4DFFFFFF) // white/30%

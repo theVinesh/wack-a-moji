@@ -6,7 +6,17 @@ import kotlin.test.assertEquals
 class ComposeAppCommonTest {
 
     @Test
-    fun example() {
-        assertEquals(3, 1 + 2)
+    fun initialAppScreen_withoutScreenshotScenario_startsAtMenu() {
+        assertEquals(AppScreen.Menu, initialAppScreen(screenshotScenario = null))
+    }
+
+    @Test
+    fun appScreenAfterStartGame_transitionsToGameplay() {
+        assertEquals(AppScreen.Gameplay, appScreenAfterStartGame())
+    }
+
+    @Test
+    fun appScreenAfterBackToMenu_returnsToMenu() {
+        assertEquals(AppScreen.Menu, appScreenAfterBackToMenu())
     }
 }
