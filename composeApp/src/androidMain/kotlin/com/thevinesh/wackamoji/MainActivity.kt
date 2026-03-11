@@ -14,6 +14,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+            val audioSettingsStore = remember(applicationContext) {
+                AudioSettingsStore(AndroidAudioSettingsStorage(applicationContext))
+            }
             val backgroundMusicController = remember(applicationContext) {
                 AndroidBackgroundMusicController(applicationContext)
             }
@@ -22,8 +25,10 @@ class MainActivity : ComponentActivity() {
             }
 
             App(
+                screenshotScenario = null,
                 backgroundMusicController = backgroundMusicController,
                 soundEffectPlayer = soundEffectPlayer,
+                audioSettingsStore = audioSettingsStore,
             )
         }
     }

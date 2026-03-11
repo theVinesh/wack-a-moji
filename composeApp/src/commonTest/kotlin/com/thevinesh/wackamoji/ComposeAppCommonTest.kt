@@ -11,6 +11,11 @@ class ComposeAppCommonTest {
     }
 
     @Test
+    fun appScreenAfterOpenSettings_transitionsToSettings() {
+        assertEquals(AppScreen.Settings, appScreenAfterOpenSettings())
+    }
+
+    @Test
     fun appScreenAfterStartGame_transitionsToGameplay() {
         assertEquals(AppScreen.Gameplay, appScreenAfterStartGame())
     }
@@ -47,12 +52,36 @@ class ComposeAppCommonTest {
         assertEquals(2, actionCount)
     }
 
+    @Test
+    fun buttonClickHandler_playsClickBeforeBackNavigationAction() {
+        val events = mutableListOf<String>()
+        val player = object : SoundEffectPlayer {
+            override fun play(effect: SoundEffect) {
+                events += effect.name
+            }
+
+            override fun setVolume(volume: Float) = Unit
+
+            override fun dispose() = Unit
+        }
+
+        val handler = buttonClickHandler(player) {
+            events += "NavigateBack"
+        }
+
+        handler()
+
+        assertEquals(listOf(SoundEffect.Click.name, "NavigateBack"), events)
+    }
+
     private class RecordingSoundEffectPlayer : SoundEffectPlayer {
         val playedEffects = mutableListOf<SoundEffect>()
 
         override fun play(effect: SoundEffect) {
             playedEffects += effect
         }
+
+        override fun setVolume(volume: Float) = Unit
 
         override fun dispose() = Unit
     }

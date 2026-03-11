@@ -14,13 +14,16 @@ import wackamole.composeapp.generated.resources.Res
 fun main() {
     ComposeViewport(document.body!!) {
         val emojiFontFamily = FontFamily(Font(Res.font.NotoColorEmoji))
+        val audioSettingsStore = remember { AudioSettingsStore(WasmAudioSettingsStorage()) }
         val backgroundMusicController = remember { WasmBackgroundMusicController() }
         val soundEffectPlayer = remember { WasmSoundEffectPlayer() }
 
         CompositionLocalProvider(LocalEmojiFont provides emojiFontFamily) {
             App(
+                screenshotScenario = null,
                 backgroundMusicController = backgroundMusicController,
                 soundEffectPlayer = soundEffectPlayer,
+                audioSettingsStore = audioSettingsStore,
             )
             // Signal JS that fonts + UI are ready
             androidx.compose.runtime.LaunchedEffect(Unit) { dismissLoader() }

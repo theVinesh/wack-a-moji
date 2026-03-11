@@ -12,14 +12,22 @@ internal class AndroidBackgroundMusicController(
 ) : BackgroundMusicController {
     private val appContext = context.applicationContext
     private var mediaPlayer: MediaPlayer? = null
+    private var volume = DEFAULT_MUSIC_VOLUME
 
     override fun start(track: BackgroundMusicTrack, loop: Boolean) {
         stop()
 
         mediaPlayer = MediaPlayer.create(appContext, track.resourceId()).apply {
             isLooping = loop
+            setVolume(volume, volume)
             start()
         }
+    }
+
+    override fun setVolume(volume: Float) {
+        val normalizedVolume = volume.normalizedAudioVolume()
+        this.volume = normalizedVolume
+        mediaPlayer?.setVolume(normalizedVolume, normalizedVolume)
     }
 
     override fun pause() {

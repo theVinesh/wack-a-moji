@@ -10,6 +10,10 @@ internal class WasmSoundEffectPlayer : SoundEffectPlayer {
         playWebSoundEffect(effect.resourcePath())
     }
 
+    override fun setVolume(volume: Float) {
+        setWebSoundEffectVolume(volume.normalizedAudioVolume())
+    }
+
     override fun dispose() {
         disposeWebSoundEffects()
     }
@@ -32,6 +36,19 @@ private fun SoundEffect.resourcePath(): String = when (this) {
     """
 )
 private external fun playWebSoundEffect(resourcePath: String)
+
+@OptIn(ExperimentalWasmJsInterop::class)
+@JsFun(
+    """
+    (volume) => {
+      const player = window.wackAMojiSoundEffects;
+      if (player) {
+        player.setVolume(volume);
+      }
+    }
+    """
+)
+private external fun setWebSoundEffectVolume(volume: Float)
 
 @OptIn(ExperimentalWasmJsInterop::class)
 @JsFun(

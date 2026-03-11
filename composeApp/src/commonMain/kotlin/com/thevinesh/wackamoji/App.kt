@@ -1,26 +1,18 @@
 package com.thevinesh.wackamoji
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,15 +20,21 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /** Provides the emoji FontFamily throughout the app. On mobile this is null (system handles emojis natively). */
 val LocalEmojiFont = compositionLocalOf<FontFamily?> { null }
+internal val LocalAudioSettingsStore = compositionLocalOf<AudioSettingsStore> {
+    AudioSettingsStore(InMemoryAudioSettingsStorage())
+}
 val LocalSoundEffectPlayer = compositionLocalOf<SoundEffectPlayer> { NoOpSoundEffectPlayer }
 
 internal enum class AppScreen {
     Menu,
+    Settings,
     Gameplay,
 }
 
 internal fun initialAppScreen(screenshotScenario: ScreenshotScenario?): AppScreen =
     if (screenshotScenario == null) AppScreen.Menu else AppScreen.Gameplay
+
+internal fun appScreenAfterOpenSettings(): AppScreen = AppScreen.Settings
 
 internal fun appScreenAfterStartGame(): AppScreen = AppScreen.Gameplay
 
@@ -45,9 +43,13 @@ internal fun appScreenAfterBackToMenu(): AppScreen = AppScreen.Menu
 @Composable
 @Preview
 fun App() {
+    val audioSettingsStore = remember { AudioSettingsStore(InMemoryAudioSettingsStorage()) }
+
     App(
+        screenshotScenario = null,
         backgroundMusicController = NoOpBackgroundMusicController,
         soundEffectPlayer = NoOpSoundEffectPlayer,
+        audioSettingsStore = audioSettingsStore,
     )
 }
 
@@ -56,10 +58,13 @@ fun App(
     backgroundMusicController: BackgroundMusicController,
     soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
 ) {
+    val audioSettingsStore = remember { AudioSettingsStore(InMemoryAudioSettingsStorage()) }
+
     App(
         screenshotScenario = null,
         backgroundMusicController = backgroundMusicController,
         soundEffectPlayer = soundEffectPlayer,
+        audioSettingsStore = audioSettingsStore,
     )
 }
 
@@ -68,20 +73,36 @@ internal fun App(
     screenshotScenario: ScreenshotScenario?,
     backgroundMusicController: BackgroundMusicController = NoOpBackgroundMusicController,
     soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
+    audioSettingsStore: AudioSettingsStore,
 ) {
     var appScreen by remember { mutableStateOf(initialAppScreen(screenshotScenario)) }
+    val audioSettings = audioSettingsStore.settings
 
     DisposableEffect(soundEffectPlayer) {
         onDispose { soundEffectPlayer.dispose() }
     }
 
-    CompositionLocalProvider(LocalSoundEffectPlayer provides soundEffectPlayer) {
+    SideEffect {
+        audioSettings.applyTo(
+            backgroundMusicController = backgroundMusicController,
+            soundEffectPlayer = soundEffectPlayer,
+        )
+    }
+
+    CompositionLocalProvider(
+        LocalAudioSettingsStore provides audioSettingsStore,
+        LocalSoundEffectPlayer provides soundEffectPlayer,
+    ) {
         MaterialTheme {
             when (appScreen) {
                 AppScreen.Menu -> GameMenuScreen(
                     onStartGame = { appScreen = appScreenAfterStartGame() },
                     onLeaderboard = {},
-                    onSettings = {},
+                    onSettings = { appScreen = appScreenAfterOpenSettings() },
+                )
+
+                AppScreen.Settings -> SettingsScreen(
+                    onBackToMenu = { appScreen = appScreenAfterBackToMenu() },
                 )
 
                 AppScreen.Gameplay -> GameplayAppScreen(
@@ -130,41 +151,20 @@ private fun GameplayAppScreen(
         onAppBackgrounded = gameViewModel::onAppBackgrounded,
     )
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        // Sky gradient — fills entire screen
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(WackAMojiColors.SkyTop, WackAMojiColors.SkyBottom)
+    SharedSkyScreen(
+        overlay = {
+            if (state.gameOver) {
+                GameOverOverlay(
+                    score = state.score,
+                    level = state.level,
+                    onRestart = { gameViewModel.onRestart() },
                 )
-            )
+            }
         }
-
-        // Clouds — fill entire screen
-        CloudsBackground()
-
-        // Game content — centered, phone-width
-        Box(
-            modifier = Modifier
-                .widthIn(max = 430.dp)
-                .fillMaxHeight(),
-        ) {
-            GameScreen(
-                viewModel = gameViewModel,
-                onBack = onBack,
-            )
-        }
-
-        // Game Over overlay — fills entire screen
-        if (state.gameOver) {
-            GameOverOverlay(
-                score = state.score,
-                level = state.level,
-                onRestart = { gameViewModel.onRestart() },
-            )
-        }
+    ) {
+        GameScreen(
+            viewModel = gameViewModel,
+            onBack = onBack,
+        )
     }
 }

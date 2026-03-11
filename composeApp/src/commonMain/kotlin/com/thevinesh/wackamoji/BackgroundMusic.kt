@@ -30,6 +30,7 @@ data class BackgroundMusicState(
 
 interface BackgroundMusicController {
     fun start(track: BackgroundMusicTrack, loop: Boolean = true)
+    fun setVolume(volume: Float)
     fun pause()
     fun resume()
     fun stop()
@@ -37,6 +38,8 @@ interface BackgroundMusicController {
 
 object NoOpBackgroundMusicController : BackgroundMusicController {
     override fun start(track: BackgroundMusicTrack, loop: Boolean) = Unit
+
+    override fun setVolume(volume: Float) = Unit
 
     override fun pause() = Unit
 

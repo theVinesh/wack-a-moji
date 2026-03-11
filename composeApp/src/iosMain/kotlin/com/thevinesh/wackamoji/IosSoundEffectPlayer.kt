@@ -11,6 +11,7 @@ private const val IOS_CLICK_SOUND_EFFECT_RESOURCE_EXTENSION = "mp3"
 @OptIn(ExperimentalForeignApi::class)
 internal class IosSoundEffectPlayer : SoundEffectPlayer {
     private val activePlayers = mutableListOf<AVAudioPlayer>()
+    private var volume = DEFAULT_SOUND_EFFECT_VOLUME
 
     override fun play(effect: SoundEffect) {
         activePlayers.removeAll { !it.playing }
@@ -20,16 +21,21 @@ internal class IosSoundEffectPlayer : SoundEffectPlayer {
         }
     }
 
+    override fun setVolume(volume: Float) {
+        val normalizedVolume = volume.normalizedAudioVolume()
+        this.volume = normalizedVolume
+        activePlayers.forEach { it.volume = normalizedVolume }
+    }
+
     override fun dispose() {
         activePlayers.forEach { it.stop() }
         activePlayers.clear()
     }
-}
 
-@OptIn(ExperimentalForeignApi::class)
-private fun createSoundEffectPlayer(effect: SoundEffect): AVAudioPlayer? {
-    val resourceUrl = bundledResourceUrl(effect) ?: return null
-    return createAudioPlayer(resourceUrl, loop = false)
+    private fun createSoundEffectPlayer(effect: SoundEffect): AVAudioPlayer? {
+        val resourceUrl = bundledResourceUrl(effect) ?: return null
+        return createAudioPlayer(resourceUrl, loop = false, volume = volume)
+    }
 }
 
 private fun bundledResourceUrl(effect: SoundEffect) = when (effect) {

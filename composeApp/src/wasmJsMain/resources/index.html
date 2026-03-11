@@ -154,7 +154,12 @@
                 loop: true,
                 resourcePath: null,
                 shouldPlay: false,
+                volume: 1,
             };
+
+            function clampVolume(volume) {
+                return Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 1));
+            }
 
             function ensureAudio(resourcePath) {
                 if (!state.element || state.resourcePath !== resourcePath) {
@@ -167,6 +172,7 @@
                 }
 
                 state.element.loop = state.loop;
+                state.element.volume = state.volume;
                 return state.element;
             }
 
@@ -239,6 +245,12 @@
                     audio.currentTime = 0;
                     tryPlay();
                 },
+                setVolume(volume) {
+                    state.volume = clampVolume(volume);
+                    if (state.element) {
+                        state.element.volume = state.volume;
+                    }
+                },
                 pause() {
                     state.shouldPlay = false;
                     if (state.element) {
@@ -261,7 +273,14 @@
         })();
 
         (() => {
+            const state = {
+                volume: 1,
+            };
             const activeEffects = new Set();
+
+            function clampVolume(volume) {
+                return Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 1));
+            }
 
             function cleanup(audio) {
                 activeEffects.delete(audio);
@@ -278,6 +297,7 @@
                     const audio = new Audio(resourcePath);
                     audio.preload = 'auto';
                     audio.loop = false;
+                    audio.volume = state.volume;
                     audio.onended = () => cleanup(audio);
                     audio.onerror = () => cleanup(audio);
                     activeEffects.add(audio);
@@ -289,6 +309,12 @@
                             cleanup(audio);
                         });
                     }
+                },
+                setVolume(volume) {
+                    state.volume = clampVolume(volume);
+                    [...activeEffects].forEach((audio) => {
+                        audio.volume = state.volume;
+                    });
                 },
                 dispose() {
                     [...activeEffects].forEach((audio) => {

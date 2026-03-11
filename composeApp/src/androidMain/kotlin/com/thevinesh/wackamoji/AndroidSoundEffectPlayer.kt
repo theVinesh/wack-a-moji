@@ -9,6 +9,7 @@ internal class AndroidSoundEffectPlayer(
 ) : SoundEffectPlayer {
     private val appContext = context.applicationContext
     private val loadedSoundIds = mutableSetOf<Int>()
+    private var volume = DEFAULT_SOUND_EFFECT_VOLUME
     private val soundPool = SoundPool.Builder()
         .setAudioAttributes(
             AudioAttributes.Builder()
@@ -34,7 +35,11 @@ internal class AndroidSoundEffectPlayer(
     override fun play(effect: SoundEffect) {
         soundIds[effect]
             ?.takeIf(loadedSoundIds::contains)
-            ?.let { soundPool.play(it, 1f, 1f, 1, 0, 1f) }
+            ?.let { soundPool.play(it, volume, volume, 1, 0, 1f) }
+    }
+
+    override fun setVolume(volume: Float) {
+        this.volume = volume.normalizedAudioVolume()
     }
 
     override fun dispose() {

@@ -9,6 +9,10 @@ internal class WasmBackgroundMusicController : BackgroundMusicController {
         startWebBackgroundMusic(track.resourcePath(), loop)
     }
 
+    override fun setVolume(volume: Float) {
+        setWebBackgroundMusicVolume(volume.normalizedAudioVolume())
+    }
+
     override fun pause() {
         pauseWebBackgroundMusic()
     }
@@ -38,6 +42,19 @@ private fun BackgroundMusicTrack.resourcePath(): String = when (this) {
     """
 )
 private external fun startWebBackgroundMusic(resourcePath: String, loop: Boolean)
+
+@OptIn(ExperimentalWasmJsInterop::class)
+@JsFun(
+    """
+    (volume) => {
+      const controller = window.wackAMojiBackgroundMusic;
+      if (controller) {
+        controller.setVolume(volume);
+      }
+    }
+    """
+)
+private external fun setWebBackgroundMusicVolume(volume: Float)
 
 @OptIn(ExperimentalWasmJsInterop::class)
 @JsFun(

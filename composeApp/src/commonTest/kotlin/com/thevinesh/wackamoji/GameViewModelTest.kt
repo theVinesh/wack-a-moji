@@ -371,6 +371,8 @@ class GameViewModelTest {
             playedEffects += effect
         }
 
+        override fun setVolume(volume: Float) = Unit
+
         override fun dispose() = Unit
     }
 }
