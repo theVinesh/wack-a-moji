@@ -32,7 +32,6 @@ echo "📸 Starting manual screenshot capture process..."
 SHARED_SCREENSHOTS_DIR="store_metadata/assets/screenshots"
 ANDROID_SHARED_ASSETS_DIR="$SHARED_SCREENSHOTS_DIR/android/en-US/phoneScreenshots"
 IOS_SHARED_ASSETS_DIR="$SHARED_SCREENSHOTS_DIR/ios/en-US"
-IOS_GENERATED_INTAKE_DIR="$SHARED_SCREENSHOTS_DIR/ios/intake/generated/en-US"
 IOS_USER_PROVIDED_INTAKE_DIR="$SHARED_SCREENSHOTS_DIR/ios/intake/user-provided-iphone/en-US"
 ANDROID_DIR="composeApp"
 IOS_DIR="iosApp"
@@ -108,7 +107,7 @@ fi
 
 # 3. Synchronize Screenshots to the Shared Directory
 echo "🔄 Copying generated screenshots into shared store metadata ($SHARED_SCREENSHOTS_DIR)..."
-mkdir -p "$ANDROID_SHARED_ASSETS_DIR" "$IOS_SHARED_ASSETS_DIR" "$IOS_GENERATED_INTAKE_DIR" "$IOS_USER_PROVIDED_INTAKE_DIR"
+mkdir -p "$ANDROID_SHARED_ASSETS_DIR" "$IOS_SHARED_ASSETS_DIR" "$IOS_USER_PROVIDED_INTAKE_DIR"
 
 # Copy Android screenshots
 if [ -d "$ANDROID_DIR/fastlane/metadata/android/en-US/images/phoneScreenshots" ]; then
@@ -117,11 +116,12 @@ if [ -d "$ANDROID_DIR/fastlane/metadata/android/en-US/images/phoneScreenshots" ]
     echo "Copied Android screenshots to $ANDROID_SHARED_ASSETS_DIR."
 fi
 
-# Copy iOS screenshots into intake staging from Snapshot output; keep final curated en-US/ folder untouched
+# Copy iOS screenshots from Snapshot output into the shared en-US folder used
+# by fastlane sync_screenshots.
 if [ -d "$IOS_SNAPSHOT_OUTPUT_DIR" ]; then
-    rm -f "$IOS_GENERATED_INTAKE_DIR"/*.png
-    cp "$IOS_SNAPSHOT_OUTPUT_DIR"/*.png "$IOS_GENERATED_INTAKE_DIR/" 2>/dev/null
-    echo "Copied generated iOS screenshots to $IOS_GENERATED_INTAKE_DIR."
+    rm -f "$IOS_SHARED_ASSETS_DIR"/*.png
+    cp "$IOS_SNAPSHOT_OUTPUT_DIR"/*.png "$IOS_SHARED_ASSETS_DIR/" 2>/dev/null
+    echo "Copied generated iOS screenshots to $IOS_SHARED_ASSETS_DIR."
 else
     echo "⚠️ No generated iOS Snapshot output found at $IOS_SNAPSHOT_OUTPUT_DIR."
 fi
@@ -147,4 +147,4 @@ else
 fi
 
 echo "🎉 Screenshot capture process complete! Please verify the platform-specific images under $SHARED_SCREENSHOTS_DIR."
-echo "Curate only the chosen final App Store set into $IOS_SHARED_ASSETS_DIR during the follow-on curation wave."
+echo "iOS generated captures are now ready in $IOS_SHARED_ASSETS_DIR for fastlane upload."

@@ -1,15 +1,14 @@
 # Manual Screenshot Generation
 
-Screenshots are generated locally, staged for review, and only the curated final set is copied into the shared store metadata tree that the release tooling uploads.
+Screenshots are generated locally and copied into the shared store metadata tree that the release tooling uploads.
 
 ## Shared screenshot layout
 
 - Android source screenshots: `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`
 - iOS final curated screenshots for upload: `store_metadata/assets/screenshots/ios/en-US/`
-- iOS generated Snapshot intake: `store_metadata/assets/screenshots/ios/intake/generated/en-US/`
 - iOS user-provided iPhone intake: `store_metadata/assets/screenshots/ios/intake/user-provided-iphone/en-US/`
 
-`capture_screenshots.sh` fills Android’s final source folder directly, but stages iOS captures in the intake folders so the final App Store set can be curated separately.
+`capture_screenshots.sh` fills Android’s final source folder directly and copies generated iOS captures into the upload source folder.
 
 ## Prerequisites
 
@@ -36,12 +35,12 @@ More information: [Fastlane Snapshot Documentation](https://docs.fastlane.tools/
 2. The script runs Android Screengrab and, on macOS, iOS Snapshot.
 3. Android output is copied into `store_metadata/assets/screenshots/android/en-US/phoneScreenshots/`.
 4. In this repo, `bundle exec fastlane snapshot` writes generated iOS captures to `iosApp/screenshots/en-US/`.
-5. `capture_screenshots.sh` copies those generated Snapshot files into `store_metadata/assets/screenshots/ios/intake/generated/en-US/`.
+5. `capture_screenshots.sh` copies those generated Snapshot files into `store_metadata/assets/screenshots/ios/en-US/` (the fastlane upload source).
 6. The two user-provided iPhone screenshots are copied into `store_metadata/assets/screenshots/ios/intake/user-provided-iphone/en-US/` when provided via `--ios-user-shot`.
-7. Curate the final uploadable App Store set later by copying only the approved images into `store_metadata/assets/screenshots/ios/en-US/`.
+7. If needed, refine the final App Store set directly in `store_metadata/assets/screenshots/ios/en-US/` before syncing listings.
 
 ## How the release tooling uses them
 
 - `bundle exec fastlane android sync_metadata` copies the Android screenshots into `composeApp/fastlane/metadata/android/en-US/images/phoneScreenshots/`, and the manual `Sync Store Metadata` workflow runs `bundle exec fastlane android sync_listings` to upload Android listing assets without uploading a new AAB.
-- `bundle exec fastlane ios sync_screenshots` mirrors only the curated final screenshots from `store_metadata/assets/screenshots/ios/en-US/` into `iosApp/fastlane/screenshots/en-US/` for `deliver`. This is a later release-sync step and is separate from the raw Snapshot capture output in `iosApp/screenshots/en-US/`.
+- `bundle exec fastlane ios sync_screenshots` mirrors screenshots from `store_metadata/assets/screenshots/ios/en-US/` into `iosApp/fastlane/screenshots/en-US/` for `deliver`.
 - The normal GitHub Actions Android/iOS deploy paths stay binary-only (`deploy-android`) and TestFlight-only (`deploy-ios`); listing screenshots sync only through the manual store-metadata workflow.
