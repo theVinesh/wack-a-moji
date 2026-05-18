@@ -15,25 +15,32 @@ final class iosAppUITests: XCTestCase {
     }
 
     @MainActor
+    func testCaptureGameScreenScreenshot() throws {
+        try captureScreenshot(named: "01_GameScreen", scenario: nil)
+    }
+
+    @MainActor
     func testCaptureGameplayScreenshot() throws {
-        try captureScreenshot(named: "01_Gameplay", scenario: "gameplay")
+        try captureScreenshot(named: "02_Gameplay", scenario: "gameplay")
     }
 
     @MainActor
     func testCaptureGameOverScreenshot() throws {
-        try captureScreenshot(named: "02_GameOver", scenario: "game-over")
+        try captureScreenshot(named: "03_GameOver", scenario: "game-over")
     }
 
     @MainActor
     func testCaptureSettingsScreenshot() throws {
-        try captureScreenshot(named: "03_Settings", scenario: "settings")
+        try captureScreenshot(named: "04_Settings", scenario: "settings")
     }
 
     @MainActor
-    private func captureScreenshot(named name: String, scenario: String) throws {
+    private func captureScreenshot(named name: String, scenario: String?) throws {
         let app = XCUIApplication()
         setupSnapshot(app)
-        app.launchArguments += ["-screenshot-scenario", scenario]
+        if let scenario {
+            app.launchArguments += ["-screenshot-scenario", scenario]
+        }
         app.launch()
 
         XCTAssertTrue(app.otherElements[rootComposeViewIdentifier].waitForExistence(timeout: 5))

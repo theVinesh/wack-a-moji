@@ -1,9 +1,11 @@
 package com.thevinesh.wackamoji
 
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import android.content.Context
+import android.content.Intent
+import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,19 +18,24 @@ class ScreenshotTest {
     @JvmField
     val localeTestRule = LocaleTestRule()
 
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
-
     @Test
     fun captureScreenshots() {
-        // Wait for the app to settle
-        composeTestRule.waitForIdle()
-        
-        // Take a screenshot of the main game screen
-        Screengrab.screenshot("01_GameScreen")
+        captureScreenshot(name = "01_GameScreen", scenario = null)
+        captureScreenshot(name = "02_Gameplay", scenario = "gameplay")
+        captureScreenshot(name = "03_GameOver", scenario = "game-over")
+        captureScreenshot(name = "04_Settings", scenario = "settings")
+    }
 
-        composeTestRule.onNodeWithText("Settings").performClick()
-        composeTestRule.waitForIdle()
-        Screengrab.screenshot("02_SettingsScreen")
+    private fun captureScreenshot(name: String, scenario: String?) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intent = Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            scenario?.let { putExtra(MainActivity.EXTRA_SCREENSHOT_SCENARIO, it) }
+        }
+
+        ActivityScenario.launch<MainActivity>(intent).use {
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+            Screengrab.screenshot(name)
+        }
     }
 }

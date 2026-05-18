@@ -10,9 +10,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        const val EXTRA_SCREENSHOT_SCENARIO = "screenshot-scenario"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        val screenshotScenario = screenshotScenarioFromLaunchValue(
+            intent?.getStringExtra(EXTRA_SCREENSHOT_SCENARIO),
+        )
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
@@ -32,7 +39,7 @@ class MainActivity : ComponentActivity() {
             }
 
             App(
-                screenshotScenario = null,
+                screenshotScenario = screenshotScenario,
                 backgroundMusicController = backgroundMusicController,
                 soundEffectPlayer = soundEffectPlayer,
                 audioSettingsStore = audioSettingsStore,
