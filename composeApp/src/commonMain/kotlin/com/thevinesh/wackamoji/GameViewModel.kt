@@ -52,6 +52,7 @@ internal fun randomMoleEmoji(): String {
 internal enum class ScreenshotScenario(val launchValue: String) {
     Gameplay("gameplay"),
     GameOver("game-over"),
+    Settings("settings"),
 }
 
 private val screenshotEmojis = listOf("😎", "🤪", "😂", "😤", "🥴", "😅", "🙄", "😡", "😎")
@@ -76,6 +77,11 @@ internal fun screenshotStateForScenario(scenario: ScreenshotScenario): GameUiSta
             timeLeft = 0,
             gameOver = true,
             cells = List(9) { false },
+            emojis = screenshotEmojis,
+        )
+
+        ScreenshotScenario.Settings -> GameUiState(
+            running = false,
             emojis = screenshotEmojis,
         )
     }

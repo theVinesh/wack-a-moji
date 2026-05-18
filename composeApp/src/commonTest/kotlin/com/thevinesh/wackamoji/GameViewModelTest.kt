@@ -158,6 +158,7 @@ class GameViewModelTest {
     fun screenshotScenarioFromLaunchValue_returnsMatchingScenario() {
         assertEquals(ScreenshotScenario.Gameplay, screenshotScenarioFromLaunchValue("gameplay"))
         assertEquals(ScreenshotScenario.GameOver, screenshotScenarioFromLaunchValue("game-over"))
+        assertEquals(ScreenshotScenario.Settings, screenshotScenarioFromLaunchValue("settings"))
         assertEquals(null, screenshotScenarioFromLaunchValue("unknown"))
     }
 
@@ -182,6 +183,17 @@ class GameViewModelTest {
         assertFalse(state.running)
         assertTrue(state.gameOver)
         assertEquals(4, state.level)
+        assertTrue(state.cells.all { !it })
+    }
+
+    @Test
+    fun screenshotStateForScenario_settingsStartsFromIdleBoard() {
+        val state = screenshotStateForScenario(ScreenshotScenario.Settings)
+
+        assertEquals(0, state.score)
+        assertEquals(GAME_DURATION_SECONDS, state.timeLeft)
+        assertFalse(state.running)
+        assertFalse(state.gameOver)
         assertTrue(state.cells.all { !it })
     }
 
