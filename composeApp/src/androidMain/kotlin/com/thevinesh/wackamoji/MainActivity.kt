@@ -37,7 +37,9 @@ class MainActivity : ComponentActivity() {
             val soundEffectPlayer = remember(applicationContext) {
                 AndroidSoundEffectPlayer(applicationContext)
             }
-            val leaderboardStore = remember { LeaderboardStore() }
+            val leaderboardStore = remember(applicationContext) {
+                LeaderboardStore(AndroidLeaderboardStorage(applicationContext))
+            }
 
             App(
                 screenshotScenario = screenshotScenario,

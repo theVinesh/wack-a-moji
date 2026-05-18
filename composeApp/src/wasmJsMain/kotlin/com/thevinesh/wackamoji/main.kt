@@ -17,7 +17,7 @@ fun main() {
         val audioSettingsStore = remember { AudioSettingsStore(WasmAudioSettingsStorage()) }
         val backgroundMusicController = remember { WasmBackgroundMusicController() }
         val soundEffectPlayer = remember { WasmSoundEffectPlayer() }
-        val leaderboardStore = remember { LeaderboardStore() }
+        val leaderboardStore = remember { LeaderboardStore(WasmLeaderboardStorage()) }
 
         CompositionLocalProvider(LocalEmojiFont provides emojiFontFamily) {
             App(

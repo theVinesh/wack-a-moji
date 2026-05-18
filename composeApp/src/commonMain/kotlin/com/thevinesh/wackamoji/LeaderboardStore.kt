@@ -6,19 +6,42 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-val LocalLeaderboardStore = compositionLocalOf<LeaderboardStore> {
+private const val LEADERBOARD_LIMIT = 20
+
+internal val LocalLeaderboardStore = compositionLocalOf<LeaderboardStore> {
     error("No LeaderboardStore provided")
 }
 
-class LeaderboardStore {
-    private val _scores = MutableStateFlow<List<Int>>(emptyList())
+internal interface LeaderboardStorage {
+    fun load(): List<Int>
+    fun save(scores: List<Int>)
+}
+
+internal class InMemoryLeaderboardStorage(
+    private var storedScores: List<Int> = emptyList(),
+) : LeaderboardStorage {
+    override fun load(): List<Int> = storedScores
+
+    override fun save(scores: List<Int>) {
+        storedScores = scores
+    }
+}
+
+internal class LeaderboardStore(
+    private val storage: LeaderboardStorage,
+) {
+    private val _scores = MutableStateFlow(storage.load().normalizedLeaderboardScores())
     val scores: StateFlow<List<Int>> = _scores.asStateFlow()
 
     fun addScore(score: Int) {
         _scores.update { currentScores ->
             val newScores = currentScores.toMutableList()
             newScores.add(score)
-            newScores.sortedDescending()
+            newScores.normalizedLeaderboardScores().also(storage::save)
         }
     }
+}
+
+private fun List<Int>.normalizedLeaderboardScores(): List<Int> {
+    return sortedDescending().take(LEADERBOARD_LIMIT)
 }
