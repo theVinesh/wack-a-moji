@@ -147,4 +147,4 @@ else
 fi
 
 echo "🎉 Screenshot capture process complete! Please verify the platform-specific images under $SHARED_SCREENSHOTS_DIR."
-echo "Curate only the chosen final 2 iPhone + 2 iPad App Store set into $IOS_SHARED_ASSETS_DIR during the follow-on curation wave."
+echo "Curate only the chosen final App Store set into $IOS_SHARED_ASSETS_DIR during the follow-on curation wave."

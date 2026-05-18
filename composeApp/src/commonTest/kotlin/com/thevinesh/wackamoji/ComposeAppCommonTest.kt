@@ -11,6 +11,16 @@ class ComposeAppCommonTest {
     }
 
     @Test
+    fun initialAppScreen_settingsScreenshotScenario_startsAtSettings() {
+        assertEquals(AppScreen.Settings, initialAppScreen(screenshotScenario = ScreenshotScenario.Settings))
+    }
+
+    @Test
+    fun initialAppScreen_gameplayScreenshotScenario_startsAtGameplay() {
+        assertEquals(AppScreen.Gameplay, initialAppScreen(screenshotScenario = ScreenshotScenario.Gameplay))
+    }
+
+    @Test
     fun appScreenAfterOpenSettings_transitionsToSettings() {
         assertEquals(AppScreen.Settings, appScreenAfterOpenSettings())
     }

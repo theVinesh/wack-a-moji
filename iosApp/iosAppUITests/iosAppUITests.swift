@@ -25,6 +25,11 @@ final class iosAppUITests: XCTestCase {
     }
 
     @MainActor
+    func testCaptureSettingsScreenshot() throws {
+        try captureScreenshot(named: "03_Settings", scenario: "settings")
+    }
+
+    @MainActor
     private func captureScreenshot(named name: String, scenario: String) throws {
         let app = XCUIApplication()
         setupSnapshot(app)

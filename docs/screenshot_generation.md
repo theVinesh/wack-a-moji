@@ -24,8 +24,8 @@ The repo now includes the minimum iOS screenshot automation plumbing needed for 
 1. Shared scheme: `iosApp/iosApp.xcodeproj/xcshareddata/xcschemes/iosAppUITests.xcscheme`
 2. Snapshot helper compiled into the UI-test target: `iosApp/iosAppUITests/SnapshotHelper.swift`
 3. Deterministic capture tests: `iosApp/iosAppUITests/iosAppUITests.swift`
-4. Launch-argument driven screenshot states: `gameplay` and `game-over`
-5. Snapshot device matrix: one iPhone + one iPad simulator, which produces a minimal 2 iPhone + 2 iPad package because each simulator captures the same two scenes
+4. Launch-argument driven screenshot states: `gameplay`, `game-over`, and `settings`
+5. Snapshot device matrix: one iPhone + one iPad simulator, each capturing the same three scenes
 
 More information: [Fastlane Snapshot Documentation](https://docs.fastlane.tools/getting-started/ios/screenshots/)
 
@@ -38,7 +38,7 @@ More information: [Fastlane Snapshot Documentation](https://docs.fastlane.tools/
 4. In this repo, `bundle exec fastlane snapshot` writes generated iOS captures to `iosApp/screenshots/en-US/`.
 5. `capture_screenshots.sh` copies those generated Snapshot files into `store_metadata/assets/screenshots/ios/intake/generated/en-US/`.
 6. The two user-provided iPhone screenshots are copied into `store_metadata/assets/screenshots/ios/intake/user-provided-iphone/en-US/` when provided via `--ios-user-shot`.
-7. Curate the final uploadable 2 iPhone + 2 iPad set later by copying only the approved images into `store_metadata/assets/screenshots/ios/en-US/`.
+7. Curate the final uploadable App Store set later by copying only the approved images into `store_metadata/assets/screenshots/ios/en-US/`.
 
 ## How the release tooling uses them
 

@@ -32,7 +32,11 @@ internal enum class AppScreen {
 }
 
 internal fun initialAppScreen(screenshotScenario: ScreenshotScenario?): AppScreen =
-    if (screenshotScenario == null) AppScreen.Menu else AppScreen.Gameplay
+    when (screenshotScenario) {
+        null -> AppScreen.Menu
+        ScreenshotScenario.Settings -> AppScreen.Settings
+        ScreenshotScenario.Gameplay, ScreenshotScenario.GameOver -> AppScreen.Gameplay
+    }
 
 internal fun appScreenAfterOpenSettings(): AppScreen = AppScreen.Settings
 

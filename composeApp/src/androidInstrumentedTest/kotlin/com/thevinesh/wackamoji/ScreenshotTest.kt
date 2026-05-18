@@ -1,6 +1,8 @@
 package com.thevinesh.wackamoji
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -24,9 +26,9 @@ class ScreenshotTest {
         
         // Take a screenshot of the main game screen
         Screengrab.screenshot("01_GameScreen")
-        
-        // You can add more interactions here:
-        // composeTestRule.onNodeWithText("START").performClick()
-        // Screengrab.screenshot("02_GameProgress")
+
+        composeTestRule.onNodeWithText("Settings").performClick()
+        composeTestRule.waitForIdle()
+        Screengrab.screenshot("02_SettingsScreen")
     }
 }
