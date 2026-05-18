@@ -24,8 +24,8 @@ The repo now includes the minimum iOS screenshot automation plumbing needed for 
 1. Shared scheme: `iosApp/iosApp.xcodeproj/xcshareddata/xcschemes/iosAppUITests.xcscheme`
 2. Snapshot helper compiled into the UI-test target: `iosApp/iosAppUITests/SnapshotHelper.swift`
 3. Deterministic capture tests: `iosApp/iosAppUITests/iosAppUITests.swift`
-4. Launch-argument driven screenshot states: `gameplay`, `game-over`, and `settings`
-5. Snapshot device matrix: one iPhone + one iPad simulator, each capturing the same three scenes
+4. Launch-argument driven screenshot states: `gameplay`, `game-over`, and `settings`, plus the default launch state for `01_GameScreen`
+5. Snapshot device matrix: one iPhone + one iPad simulator, each capturing the same four scenes (`01_GameScreen`, `02_Gameplay`, `03_GameOver`, `04_Settings`)
 
 More information: [Fastlane Snapshot Documentation](https://docs.fastlane.tools/getting-started/ios/screenshots/)
 
