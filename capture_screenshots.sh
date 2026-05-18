@@ -43,22 +43,29 @@ echo "🤖 Starting Android screenshot capture..."
 echo "Note: Ensure you have a running Android Emulator before proceeding."
 cd $ANDROID_DIR || exit 1
 
-# Check if Fastlane is initialized in composeApp
-if [ ! -d "fastlane" ]; then
-    echo "⚠️ Warning: Fastlane not fully configured in $ANDROID_DIR. Setting up basic screengrab file..."
-    mkdir -p fastlane
-    cat <<EOF > fastlane/Screengrabfile
+# Ensure screengrab config exists and is non-interactive
+mkdir -p fastlane
+cat <<EOF > fastlane/Screengrabfile
 android_home(ENV['ANDROID_HOME'])
 app_package_name("com.thevinesh.wackamoji")
-test_package_name("com.thevinesh.wackamoji.test")
+tests_package_name("com.thevinesh.wackamoji.test")
 locales(["en-US"])
 clear_previous_screenshots(true)
+app_apk_path("build/outputs/apk/debug/composeApp-debug.apk")
+tests_apk_path("build/outputs/apk/androidTest/debug/composeApp-debug-androidTest.apk")
+reinstall_app(true)
 EOF
-fi
 
 # Run the Android UI tests to generate screenshots
 echo "Building and running tests via gradlew..."
-./../gradlew :composeApp:assembleDebug :composeApp:assembleDebugAndroidTest
+./../gradlew :composeApp:assembleDebug :composeApp:assembleDebugAndroidTest -Pandroid.dependency.useConstraints=false
+
+# Prevent INSTALL_FAILED_VERSION_DOWNGRADE when a newer store build is present.
+if command -v adb &> /dev/null; then
+    while IFS= read -r device_serial; do
+        adb -s "$device_serial" uninstall com.thevinesh.wackamoji >/dev/null 2>&1 || true
+    done < <(adb devices | awk 'NR>1 && $2=="device" {print $1}')
+fi
 
 # Check fastlane availability
 if command -v bundle &> /dev/null; then
