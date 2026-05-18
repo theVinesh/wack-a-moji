@@ -37,12 +37,14 @@ class MainActivity : ComponentActivity() {
             val soundEffectPlayer = remember(applicationContext) {
                 AndroidSoundEffectPlayer(applicationContext)
             }
+            val leaderboardStore = remember { LeaderboardStore() }
 
             App(
                 screenshotScenario = screenshotScenario,
                 backgroundMusicController = backgroundMusicController,
                 soundEffectPlayer = soundEffectPlayer,
                 audioSettingsStore = audioSettingsStore,
+                leaderboardStore = leaderboardStore,
             )
         }
     }

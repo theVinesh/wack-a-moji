@@ -96,7 +96,7 @@ internal fun App(
     backgroundMusicController: BackgroundMusicController = NoOpBackgroundMusicController,
     soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
     audioSettingsStore: AudioSettingsStore,
-    leaderboardStore: LeaderboardStore = LeaderboardStore(),
+    leaderboardStore: LeaderboardStore,
 ) {
     var appScreen by remember { mutableStateOf(initialAppScreen(screenshotScenario)) }
     val audioSettings = audioSettingsStore.settings

@@ -17,6 +17,7 @@ fun main() {
         val audioSettingsStore = remember { AudioSettingsStore(WasmAudioSettingsStorage()) }
         val backgroundMusicController = remember { WasmBackgroundMusicController() }
         val soundEffectPlayer = remember { WasmSoundEffectPlayer() }
+        val leaderboardStore = remember { LeaderboardStore() }
 
         CompositionLocalProvider(LocalEmojiFont provides emojiFontFamily) {
             App(
@@ -24,6 +25,7 @@ fun main() {
                 backgroundMusicController = backgroundMusicController,
                 soundEffectPlayer = soundEffectPlayer,
                 audioSettingsStore = audioSettingsStore,
+                leaderboardStore = leaderboardStore,
             )
             // Signal JS that fonts + UI are ready
             androidx.compose.runtime.LaunchedEffect(Unit) { dismissLoader() }

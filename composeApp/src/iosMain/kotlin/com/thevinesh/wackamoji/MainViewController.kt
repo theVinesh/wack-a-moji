@@ -13,12 +13,14 @@ fun MainViewController(screenshotScenarioName: String?): UIViewController {
 
     return ComposeUIViewController {
         val audioSettingsStore = remember { AudioSettingsStore(IosAudioSettingsStorage()) }
+        val leaderboardStore = remember { LeaderboardStore() }
 
         App(
             screenshotScenario = screenshotScenario,
             backgroundMusicController = backgroundMusicController,
             soundEffectPlayer = soundEffectPlayer,
             audioSettingsStore = audioSettingsStore,
+            leaderboardStore = leaderboardStore,
         )
     }
 }
