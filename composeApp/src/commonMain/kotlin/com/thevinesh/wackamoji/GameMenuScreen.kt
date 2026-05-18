@@ -20,7 +20,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private const val SHOW_LEADERBOARD_BUTTON = false
+private const val SHOW_LEADERBOARD_BUTTON = true
 
 @Composable
 internal fun GameMenuScreen(

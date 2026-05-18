@@ -28,6 +28,7 @@ val LocalSoundEffectPlayer = compositionLocalOf<SoundEffectPlayer> { NoOpSoundEf
 internal enum class AppScreen {
     Menu,
     Settings,
+    Leaderboard,
     Gameplay,
 }
 
@@ -39,6 +40,8 @@ internal fun initialAppScreen(screenshotScenario: ScreenshotScenario?): AppScree
     }
 
 internal fun appScreenAfterOpenSettings(): AppScreen = AppScreen.Settings
+
+internal fun appScreenAfterOpenLeaderboard(): AppScreen = AppScreen.Leaderboard
 
 internal fun appScreenAfterStartGame(): AppScreen = AppScreen.Gameplay
 
@@ -60,6 +63,7 @@ fun App() {
         backgroundMusicController = NoOpBackgroundMusicController,
         soundEffectPlayer = NoOpSoundEffectPlayer,
         audioSettingsStore = audioSettingsStore,
+        leaderboardStore = remember { LeaderboardStore() },
     )
 }
 
@@ -75,12 +79,14 @@ fun App(
     soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
 ) {
     val audioSettingsStore = remember { AudioSettingsStore(InMemoryAudioSettingsStorage()) }
+    val leaderboardStore = remember { LeaderboardStore() }
 
     App(
         screenshotScenario = null,
         backgroundMusicController = backgroundMusicController,
         soundEffectPlayer = soundEffectPlayer,
         audioSettingsStore = audioSettingsStore,
+        leaderboardStore = leaderboardStore,
     )
 }
 
@@ -90,6 +96,7 @@ internal fun App(
     backgroundMusicController: BackgroundMusicController = NoOpBackgroundMusicController,
     soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
     audioSettingsStore: AudioSettingsStore,
+    leaderboardStore: LeaderboardStore = LeaderboardStore(),
 ) {
     var appScreen by remember { mutableStateOf(initialAppScreen(screenshotScenario)) }
     val audioSettings = audioSettingsStore.settings
@@ -107,14 +114,19 @@ internal fun App(
 
     CompositionLocalProvider(
         LocalAudioSettingsStore provides audioSettingsStore,
+        LocalLeaderboardStore provides leaderboardStore,
         LocalSoundEffectPlayer provides soundEffectPlayer,
     ) {
         MaterialTheme {
             when (appScreen) {
                 AppScreen.Menu -> GameMenuScreen(
                     onStartGame = { appScreen = appScreenAfterStartGame() },
-                    onLeaderboard = {},
+                    onLeaderboard = { appScreen = appScreenAfterOpenLeaderboard() },
                     onSettings = { appScreen = appScreenAfterOpenSettings() },
+                )
+
+                AppScreen.Leaderboard -> LeaderboardScreen(
+                    onBackToMenu = { appScreen = appScreenAfterBackToMenu() },
                 )
 
                 AppScreen.Settings -> SettingsScreen(
@@ -159,6 +171,14 @@ private fun GameplayAppScreen(
     }
     val state by gameViewModel.uiState.collectAsState()
     val backgroundMusicState by gameViewModel.backgroundMusicState.collectAsState()
+    val leaderboardStore = LocalLeaderboardStore.current
+
+    DisposableEffect(state.gameOver) {
+        if (state.gameOver && state.score > 0) {
+            leaderboardStore.addScore(state.score)
+        }
+        onDispose { }
+    }
 
     BindBackgroundMusic(
         controller = backgroundMusicController,
