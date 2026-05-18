@@ -23,6 +23,7 @@ This project targets **Android** and **iOS**.
 - Looping background music is handled separately from one-shot sound effects.
 - Background music loops during gameplay, while hit/button sounds are fire-and-forget so they do not restart or interrupt the loop.
 - Audio assets are checked in once under `composeApp/src/androidMain/res/raw/`, and the build copies or renames those canonical files into the Android, iOS, and wasm/web packaging outputs.
+- See [`docs/audio_architecture.md`](./docs/audio_architecture.md) for the full shared-control and per-platform implementation details.
 
 ## Getting Started
 
