@@ -20,6 +20,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+private const val SHOW_LEADERBOARD_BUTTON = false
+
 @Composable
 internal fun GameMenuScreen(
     onStartGame: () -> Unit,
@@ -77,13 +79,15 @@ internal fun GameMenuContent(
                 onClick = onStartGame,
                 modifier = Modifier.fillMaxWidth()
             )
-            GameButton(
-                text = "Leaderboard",
-                backgroundColor = WackAMojiColors.LeaderboardPurple,
-                shadowColor = WackAMojiColors.LeaderboardShadow,
-                onClick = onLeaderboard,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (SHOW_LEADERBOARD_BUTTON) {
+                GameButton(
+                    text = "Leaderboard",
+                    backgroundColor = WackAMojiColors.LeaderboardPurple,
+                    shadowColor = WackAMojiColors.LeaderboardShadow,
+                    onClick = onLeaderboard,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             GameButton(
                 text = "Settings",
                 backgroundColor = WackAMojiColors.PauseGreen,
