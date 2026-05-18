@@ -57,13 +57,16 @@ fun App() {
     val audioSettingsStore = remember {
         AudioSettingsStore(InMemoryAudioSettingsStorage(APP_PREVIEW_AUDIO_SETTINGS))
     }
+    val leaderboardStore = remember {
+        LeaderboardStore(InMemoryLeaderboardStorage())
+    }
 
     App(
         screenshotScenario = null,
         backgroundMusicController = NoOpBackgroundMusicController,
         soundEffectPlayer = NoOpSoundEffectPlayer,
         audioSettingsStore = audioSettingsStore,
-        leaderboardStore = remember { LeaderboardStore() },
+        leaderboardStore = leaderboardStore,
     )
 }
 
@@ -79,7 +82,7 @@ fun App(
     soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
 ) {
     val audioSettingsStore = remember { AudioSettingsStore(InMemoryAudioSettingsStorage()) }
-    val leaderboardStore = remember { LeaderboardStore() }
+    val leaderboardStore = remember { LeaderboardStore(InMemoryLeaderboardStorage()) }
 
     App(
         screenshotScenario = null,
