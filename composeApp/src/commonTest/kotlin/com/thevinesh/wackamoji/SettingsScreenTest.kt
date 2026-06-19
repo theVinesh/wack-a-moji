@@ -33,8 +33,20 @@ class SettingsScreenTest {
 
     @Test
     fun formatVolumePercentage_normalizesAndRoundsForDisplay() {
+        // Out of bounds values
         assertEquals("0%", formatVolumePercentage(-0.2f))
-        assertEquals("43%", formatVolumePercentage(0.426f))
         assertEquals("100%", formatVolumePercentage(1.4f))
+
+        // Exact boundaries
+        assertEquals("0%", formatVolumePercentage(0.0f))
+        assertEquals("50%", formatVolumePercentage(0.5f))
+        assertEquals("100%", formatVolumePercentage(1.0f))
+
+        // Rounding behavior
+        assertEquals("43%", formatVolumePercentage(0.426f))
+        assertEquals("0%", formatVolumePercentage(0.004f))
+        assertEquals("1%", formatVolumePercentage(0.005f))
+        assertEquals("99%", formatVolumePercentage(0.994f))
+        assertEquals("100%", formatVolumePercentage(0.995f))
     }
 }
