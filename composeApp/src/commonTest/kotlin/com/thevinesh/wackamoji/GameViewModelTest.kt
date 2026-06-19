@@ -121,6 +121,17 @@ class GameViewModelTest {
         assertEquals(300L to 600L, moleUpTimeRange(5))
     }
 
+    // ─── randomMoleEmoji ─────────────────────────────────────────────────────
+
+    @Test
+    fun randomMoleEmoji_returnsEmojiFromDefinedPool() {
+        val pool = listOf("😡", "😂", "🙄", "😅", "🤪", "😤", "🥴", "😎")
+        for (i in 0..100) {
+            val emoji = randomMoleEmoji()
+            assertTrue(pool.contains(emoji), "Emoji $emoji is not in the allowed pool")
+        }
+    }
+
     // ─── GameUiState derived properties ──────────────────────────────────────
 
     @Test
