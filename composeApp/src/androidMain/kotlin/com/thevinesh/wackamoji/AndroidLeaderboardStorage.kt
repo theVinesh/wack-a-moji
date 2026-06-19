@@ -1,7 +1,6 @@
 package com.thevinesh.wackamoji
 
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.core.content.edit
 
 private const val LEADERBOARD_PREFERENCES_NAME = "leaderboard"
