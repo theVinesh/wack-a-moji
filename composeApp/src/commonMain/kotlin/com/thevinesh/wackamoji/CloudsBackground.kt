@@ -2,6 +2,7 @@ package com.thevinesh.wackamoji
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -25,38 +27,29 @@ import androidx.compose.ui.graphics.Brush
  * dimensions** so the clouds scale proportionally on any screen size.
  */
 @Composable
+private fun InfiniteTransition.animateCloudProgress(durationMillis: Int): State<Float> {
+    return animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = durationMillis, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+}
+
+@Composable
 fun CloudsBackground() {
     val infiniteTransition = rememberInfiniteTransition()
 
     // Cloud 1 animation (baseline speed)
-    val cloud1Progress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 40000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        )
-    )
+    val cloud1Progress by infiniteTransition.animateCloudProgress(durationMillis = 40000)
 
     // Cloud 2 animation (slower)
-    val cloud2Progress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 55000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        )
-    )
+    val cloud2Progress by infiniteTransition.animateCloudProgress(durationMillis = 55000)
 
     // Cloud 3 animation (faster)
-    val cloud3Progress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 30000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        )
-    )
+    val cloud3Progress by infiniteTransition.animateCloudProgress(durationMillis = 30000)
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val w = size.width
