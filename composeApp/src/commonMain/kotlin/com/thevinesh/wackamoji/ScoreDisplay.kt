@@ -59,9 +59,7 @@ internal fun formatScore(score: Int): String {
     return when {
         score >= 1000 -> {
             val thousands = score / 1000
-            val hundreds = (score % 1000) / 100
-            if (hundreds > 0) "$thousands,${(score % 1000).toString().padStart(3, '0')}"
-            else "$thousands,000"
+            "$thousands,${(score % 1000).toString().padStart(3, '0')}"
         }
 
         else -> score.toString()
