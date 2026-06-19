@@ -10,6 +10,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
@@ -49,24 +51,17 @@ fun MoleHole(
         contentAlignment = Alignment.Center
     ) {
         // Brown circle background
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
+        Spacer(
+            modifier = Modifier.fillMaxSize().drawWithCache {
+                val w = size.width
+                val h = size.height
 
-            // Main brown fill
-            drawCircle(
-                color = WackAMojiColors.EarthBrown,
-                radius = w / 2f,
-                center = Offset(w / 2f, h / 2f)
-            )
+                // Inset shadow effect — dark gradient from top
+                val insetPath = Path().apply {
+                    addOval(Rect(0f, 0f, w, h))
+                }
 
-            // Inset shadow effect — dark gradient from top
-            val insetPath = Path().apply {
-                addOval(Rect(0f, 0f, w, h))
-            }
-            drawPath(
-                path = insetPath,
-                brush = Brush.verticalGradient(
+                val insetBrush = Brush.verticalGradient(
                     colors = listOf(
                         Color(0x99000000), // 60% black at top
                         Color(0x33000000), // 20% black at middle
@@ -75,19 +70,33 @@ fun MoleHole(
                     startY = 0f,
                     endY = h * 0.7f
                 )
-            )
 
-            // Top border accent — darker arc at the top
-            drawArc(
-                color = WackAMojiColors.HoleTopBorder,
-                startAngle = 200f,
-                sweepAngle = 140f,
-                useCenter = false,
-                topLeft = Offset(2f, 2f),
-                size = androidx.compose.ui.geometry.Size(w - 4f, h - 4f),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
-            )
-        }
+                onDrawBehind {
+                    // Main brown fill
+                    drawCircle(
+                        color = WackAMojiColors.EarthBrown,
+                        radius = w / 2f,
+                        center = Offset(w / 2f, h / 2f)
+                    )
+
+                    drawPath(
+                        path = insetPath,
+                        brush = insetBrush
+                    )
+
+                    // Top border accent — darker arc at the top
+                    drawArc(
+                        color = WackAMojiColors.HoleTopBorder,
+                        startAngle = 200f,
+                        sweepAngle = 140f,
+                        useCenter = false,
+                        topLeft = Offset(2f, 2f),
+                        size = androidx.compose.ui.geometry.Size(w - 4f, h - 4f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
+                    )
+                }
+            }
+        )
 
         // Emoji appearing in the hole
         AnimatedVisibility(
