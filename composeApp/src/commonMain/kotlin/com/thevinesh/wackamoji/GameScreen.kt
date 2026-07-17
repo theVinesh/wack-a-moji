@@ -47,8 +47,13 @@ fun GameScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Timer section
-            TimerSection(timeLeft = state.timeLeft, timerFraction = state.timerFraction)
+            when (state.mode) {
+                GameMode.Classic -> TimerSection(
+                    timeLeft = state.timeLeft,
+                    timerFraction = state.timerFraction,
+                )
+                GameMode.Endless -> LivesSection(lives = state.lives)
+            }
 
             // Level indicator
             LevelIndicator(level = state.level)

@@ -31,6 +31,23 @@ class ComposeAppCommonTest {
     }
 
     @Test
+    fun appScreenAfterStartClassic_transitionsToGameplay() {
+        assertEquals(AppScreen.Gameplay, appScreenAfterStartClassic())
+    }
+
+    @Test
+    fun appScreenAfterStartEndless_transitionsToGameplay() {
+        assertEquals(AppScreen.Gameplay, appScreenAfterStartEndless())
+    }
+
+    @Test
+    fun formatLivesDisplay_showsHeartsForRemainingLives() {
+        assertEquals("❤️❤️❤️", formatLivesDisplay(3))
+        assertEquals("❤️", formatLivesDisplay(1))
+        assertEquals("🖤", formatLivesDisplay(0))
+    }
+
+    @Test
     fun appScreenAfterBackToMenu_returnsToMenu() {
         assertEquals(AppScreen.Menu, appScreenAfterBackToMenu())
     }

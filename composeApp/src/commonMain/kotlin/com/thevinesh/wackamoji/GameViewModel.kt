@@ -17,8 +17,53 @@ const val MOLE_UP_TIME_MIN_MS = 600L
 const val MOLE_UP_TIME_MAX_MS = 1200L
 const val DELAY_BETWEEN_MOLES_MS = 80L
 const val GAME_DURATION_SECONDS = 30
+const val ENDLESS_START_LIVES = 3
 
 internal val LEVEL_THRESHOLDS = listOf(0, 5, 15, 30, 50, 75)
+
+enum class GameMode {
+    Classic,
+    Endless,
+}
+
+internal fun gameOverTitle(mode: GameMode): String = when (mode) {
+    GameMode.Classic -> "TIME'S UP!"
+    GameMode.Endless -> "OUT OF LIVES!"
+}
+
+internal fun gameOverEmoji(mode: GameMode): String = when (mode) {
+    GameMode.Classic -> "⏰"
+    GameMode.Endless -> "💔"
+}
+
+internal fun freshGameUiState(mode: GameMode): GameUiState = GameUiState(
+    mode = mode,
+    lives = ENDLESS_START_LIVES,
+)
+
+internal fun applyEndlessMisses(
+    state: GameUiState,
+    missedCount: Int,
+    cells: List<Boolean>,
+    emojis: List<String>,
+): GameUiState {
+    if (state.mode != GameMode.Endless || missedCount <= 0) {
+        return state.copy(cells = cells, emojis = emojis)
+    }
+
+    val newLives = (state.lives - missedCount).coerceAtLeast(0)
+    return if (newLives == 0) {
+        state.copy(
+            cells = List(9) { false },
+            emojis = emojis,
+            lives = 0,
+            gameOver = true,
+            running = false,
+        )
+    } else {
+        state.copy(cells = cells, emojis = emojis, lives = newLives)
+    }
+}
 
 // ─── Pure helpers (easily testable) ──────────────────────────────────────────
 
@@ -86,8 +131,11 @@ internal fun screenshotStateForScenario(scenario: ScreenshotScenario): GameUiSta
         )
     }
 
-private fun initialGameUiState(screenshotScenario: ScreenshotScenario?): GameUiState =
-    screenshotScenario?.let(::screenshotStateForScenario) ?: GameUiState()
+private fun initialGameUiState(
+    screenshotScenario: ScreenshotScenario?,
+    mode: GameMode,
+): GameUiState =
+    screenshotScenario?.let(::screenshotStateForScenario) ?: freshGameUiState(mode)
 
 private fun shouldAutoplayBackgroundMusic(
     screenshotScenario: ScreenshotScenario?,
@@ -112,6 +160,8 @@ data class GameUiState(
     val running: Boolean = true,
     val timeLeft: Int = GAME_DURATION_SECONDS,
     val gameOver: Boolean = false,
+    val mode: GameMode = GameMode.Classic,
+    val lives: Int = ENDLESS_START_LIVES,
     val cells: List<Boolean> = List(9) { false },
     val emojis: List<String> = List(9) { randomMoleEmoji() },
 ) {
@@ -123,11 +173,12 @@ data class GameUiState(
 
 class GameViewModel internal constructor(
     private val screenshotScenario: ScreenshotScenario? = null,
+    private val mode: GameMode = GameMode.Classic,
     private val backgroundMusicAutoplayEnabled: Boolean = screenshotScenario == null,
     private val soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(initialGameUiState(screenshotScenario))
+    private val _uiState = MutableStateFlow(initialGameUiState(screenshotScenario, mode))
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
     private val _backgroundMusicState = MutableStateFlow(
@@ -171,7 +222,8 @@ class GameViewModel internal constructor(
             return
         }
 
-        _uiState.value = GameUiState()
+        val currentMode = _uiState.value.mode
+        _uiState.value = freshGameUiState(currentMode)
         startGameLoops()
     }
 
@@ -224,7 +276,9 @@ class GameViewModel internal constructor(
 
     private fun startGameLoops() {
         stopGameLoops()
-        timerJob = viewModelScope.launch { runTimer() }
+        if (_uiState.value.mode == GameMode.Classic) {
+            timerJob = viewModelScope.launch { runTimer() }
+        }
         spawnJob = viewModelScope.launch { runMoleSpawner() }
     }
 
@@ -236,10 +290,10 @@ class GameViewModel internal constructor(
     private suspend fun runTimer() {
         while (true) {
             val state = _uiState.value
-            if (!state.running || state.gameOver) return
+            if (!state.running || state.gameOver || state.mode != GameMode.Classic) return
             delay(1000L)
             _uiState.update { s ->
-                if (!s.running || s.gameOver) return@update s
+                if (!s.running || s.gameOver || s.mode != GameMode.Classic) return@update s
                 val newTime = s.timeLeft - 1
                 if (newTime <= 0) {
                     s.copy(
@@ -267,12 +321,16 @@ class GameViewModel internal constructor(
             val (minTime, maxTime) = moleUpTimeRange(currentLevel)
 
             val newCells = state.cells.toMutableList()
+            var missedCount = 0
 
             // Tick down mole visibility timers
             for (i in 0 until 9) {
                 if (newCells[i]) {
                     remaining[i] = (remaining[i] - DELAY_BETWEEN_MOLES_MS).coerceAtLeast(0L)
-                    if (remaining[i] == 0L) newCells[i] = false
+                    if (remaining[i] == 0L) {
+                        newCells[i] = false
+                        missedCount++
+                    }
                 }
             }
 
@@ -290,7 +348,12 @@ class GameViewModel internal constructor(
 
             _uiState.update { s ->
                 if (!s.running || s.gameOver) return@update s
-                s.copy(cells = newCells, emojis = newEmojis)
+                applyEndlessMisses(
+                    state = s,
+                    missedCount = missedCount,
+                    cells = newCells,
+                    emojis = newEmojis,
+                )
             }
 
             delay(DELAY_BETWEEN_MOLES_MS)
@@ -303,6 +366,7 @@ class GameViewModel internal constructor(
             soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
         ): GameViewModel {
             val viewModel = GameViewModel(
+                mode = initialState.mode,
                 backgroundMusicAutoplayEnabled = false,
                 soundEffectPlayer = soundEffectPlayer,
             )

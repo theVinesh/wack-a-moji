@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -24,7 +25,8 @@ private const val SHOW_LEADERBOARD_BUTTON = true
 
 @Composable
 internal fun GameMenuScreen(
-    onStartGame: () -> Unit,
+    onStartClassic: () -> Unit,
+    onStartEndless: () -> Unit,
     onLeaderboard: () -> Unit,
     onSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -32,7 +34,8 @@ internal fun GameMenuScreen(
 ) {
     SharedSkyScreen(modifier = modifier, animateClouds = animateClouds) {
         GameMenuContent(
-            onStartGame = onStartGame,
+            onStartClassic = onStartClassic,
+            onStartEndless = onStartEndless,
             onLeaderboard = onLeaderboard,
             onSettings = onSettings,
         )
@@ -41,7 +44,8 @@ internal fun GameMenuScreen(
 
 @Composable
 internal fun GameMenuContent(
-    onStartGame: () -> Unit,
+    onStartClassic: () -> Unit,
+    onStartEndless: () -> Unit,
     onLeaderboard: () -> Unit,
     onSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -73,10 +77,17 @@ internal fun GameMenuContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             GameButton(
-                text = "Start Game",
+                text = "Classic",
                 backgroundColor = WackAMojiColors.RestartOrange,
                 shadowColor = WackAMojiColors.RestartShadow,
-                onClick = onStartGame,
+                onClick = onStartClassic,
+                modifier = Modifier.fillMaxWidth()
+            )
+            GameButton(
+                text = "Endless",
+                backgroundColor = WackAMojiColors.Accent,
+                shadowColor = Color(0xFFCA8A04),
+                onClick = onStartEndless,
                 modifier = Modifier.fillMaxWidth()
             )
             if (SHOW_LEADERBOARD_BUTTON) {
@@ -107,7 +118,8 @@ private fun GameMenuContentPreview() {
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             GameMenuContent(
-                onStartGame = {},
+                onStartClassic = {},
+                onStartEndless = {},
                 onLeaderboard = {},
                 onSettings = {},
             )
@@ -121,7 +133,8 @@ private fun GameMenuScreenPreview() {
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             GameMenuScreen(
-                onStartGame = {},
+                onStartClassic = {},
+                onStartEndless = {},
                 onLeaderboard = {},
                 onSettings = {},
                 animateClouds = false,

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 internal fun GameOverOverlay(
     score: Int,
     level: Int,
+    mode: GameMode = GameMode.Classic,
     onRestart: () -> Unit,
 ) {
     Box(
@@ -49,12 +50,12 @@ internal fun GameOverOverlay(
                 .padding(32.dp)
         ) {
             Text(
-                text = "⏰",
+                text = gameOverEmoji(mode),
                 fontSize = 48.sp,
                 fontFamily = LocalEmojiFont.current,
             )
             Text(
-                text = "TIME'S UP!",
+                text = gameOverTitle(mode),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
                 color = WackAMojiColors.Primary,

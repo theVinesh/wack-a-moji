@@ -231,6 +231,95 @@ class GameViewModelTest {
         assertEquals(BackgroundMusicPlayback.Stopped, vm.backgroundMusicState.value.playback)
     }
 
+    // ─── Game modes ──────────────────────────────────────────────────────────
+
+    @Test
+    fun gameOverTitle_matchesMode() {
+        assertEquals("TIME'S UP!", gameOverTitle(GameMode.Classic))
+        assertEquals("OUT OF LIVES!", gameOverTitle(GameMode.Endless))
+    }
+
+    @Test
+    fun freshGameUiState_endlessStartsWithFullLives() {
+        val state = freshGameUiState(GameMode.Endless)
+        assertEquals(GameMode.Endless, state.mode)
+        assertEquals(ENDLESS_START_LIVES, state.lives)
+        assertTrue(state.running)
+        assertFalse(state.gameOver)
+    }
+
+    @Test
+    fun applyEndlessMisses_reducesLivesWithoutEnding() {
+        val state = GameUiState(mode = GameMode.Endless, lives = 3, running = true)
+        val cells = List(9) { false }
+        val emojis = List(9) { "😎" }
+
+        val next = applyEndlessMisses(state, missedCount = 1, cells = cells, emojis = emojis)
+
+        assertEquals(2, next.lives)
+        assertFalse(next.gameOver)
+        assertTrue(next.running)
+    }
+
+    @Test
+    fun applyEndlessMisses_endsGameWhenLivesReachZero() {
+        val state = GameUiState(
+            mode = GameMode.Endless,
+            lives = 1,
+            running = true,
+            cells = List(9) { it == 0 },
+        )
+        val cells = List(9) { false }
+        val emojis = List(9) { "😎" }
+
+        val next = applyEndlessMisses(state, missedCount = 1, cells = cells, emojis = emojis)
+
+        assertEquals(0, next.lives)
+        assertTrue(next.gameOver)
+        assertFalse(next.running)
+        assertTrue(next.cells.all { !it })
+    }
+
+    @Test
+    fun applyEndlessMisses_ignoresMissesInClassicMode() {
+        val state = GameUiState(mode = GameMode.Classic, lives = 3, running = true)
+        val cells = List(9) { it == 1 }
+        val emojis = List(9) { "😂" }
+
+        val next = applyEndlessMisses(state, missedCount = 2, cells = cells, emojis = emojis)
+
+        assertEquals(3, next.lives)
+        assertFalse(next.gameOver)
+        assertEquals(cells, next.cells)
+    }
+
+    @Test
+    fun onRestart_preservesEndlessMode() {
+        val vm = GameViewModel(mode = GameMode.Endless)
+        assertEquals(GameMode.Endless, vm.uiState.value.mode)
+
+        vm.onPauseResume()
+        vm.onRestart()
+
+        assertEquals(GameMode.Endless, vm.uiState.value.mode)
+        assertEquals(ENDLESS_START_LIVES, vm.uiState.value.lives)
+        assertTrue(vm.uiState.value.running)
+        assertFalse(vm.uiState.value.gameOver)
+    }
+
+    @Test
+    fun endlessMode_doesNotTickClassicTimer() = runTest(testDispatcher.scheduler) {
+        val vm = GameViewModel(mode = GameMode.Endless)
+        vm.onPauseResume() // pause so spawn misses cannot end the run
+
+        advanceTimeBy(GAME_DURATION_SECONDS * 1000L)
+        runCurrent()
+
+        assertEquals(GAME_DURATION_SECONDS, vm.uiState.value.timeLeft)
+        assertFalse(vm.uiState.value.gameOver)
+        assertEquals(GameMode.Endless, vm.uiState.value.mode)
+    }
+
     // ─── GameViewModel.onPauseResume ─────────────────────────────────────────
 
     @Test

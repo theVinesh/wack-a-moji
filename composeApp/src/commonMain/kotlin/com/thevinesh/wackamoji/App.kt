@@ -45,6 +45,10 @@ internal fun appScreenAfterOpenLeaderboard(): AppScreen = AppScreen.Leaderboard
 
 internal fun appScreenAfterStartGame(): AppScreen = AppScreen.Gameplay
 
+internal fun appScreenAfterStartClassic(): AppScreen = AppScreen.Gameplay
+
+internal fun appScreenAfterStartEndless(): AppScreen = AppScreen.Gameplay
+
 internal fun appScreenAfterBackToMenu(): AppScreen = AppScreen.Menu
 
 private val APP_PREVIEW_AUDIO_SETTINGS = AudioSettings(
@@ -102,6 +106,7 @@ internal fun App(
     leaderboardStore: LeaderboardStore,
 ) {
     var appScreen by remember { mutableStateOf(initialAppScreen(screenshotScenario)) }
+    var selectedGameMode by remember { mutableStateOf(GameMode.Classic) }
     val audioSettings = audioSettingsStore.settings
 
     DisposableEffect(soundEffectPlayer) {
@@ -123,7 +128,14 @@ internal fun App(
         MaterialTheme {
             when (appScreen) {
                 AppScreen.Menu -> GameMenuScreen(
-                    onStartGame = { appScreen = appScreenAfterStartGame() },
+                    onStartClassic = {
+                        selectedGameMode = GameMode.Classic
+                        appScreen = appScreenAfterStartClassic()
+                    },
+                    onStartEndless = {
+                        selectedGameMode = GameMode.Endless
+                        appScreen = appScreenAfterStartEndless()
+                    },
                     onLeaderboard = { appScreen = appScreenAfterOpenLeaderboard() },
                     onSettings = { appScreen = appScreenAfterOpenSettings() },
                 )
@@ -138,6 +150,7 @@ internal fun App(
 
                 AppScreen.Gameplay -> GameplayAppScreen(
                     screenshotScenario = screenshotScenario,
+                    gameMode = selectedGameMode,
                     backgroundMusicController = backgroundMusicController,
                     soundEffectPlayer = soundEffectPlayer,
                     onBack = { appScreen = appScreenAfterBackToMenu() },
@@ -150,6 +163,7 @@ internal fun App(
 @Composable
 private fun GameplayAppScreen(
     screenshotScenario: ScreenshotScenario?,
+    gameMode: GameMode,
     backgroundMusicController: BackgroundMusicController,
     soundEffectPlayer: SoundEffectPlayer,
     onBack: () -> Unit,
@@ -168,6 +182,7 @@ private fun GameplayAppScreen(
     val gameViewModel = viewModel(viewModelStoreOwner = gameplayViewModelStoreOwner) {
         GameViewModel(
             screenshotScenario = screenshotScenario,
+            mode = gameMode,
             backgroundMusicAutoplayEnabled = backgroundMusicAutoplayEnabled,
             soundEffectPlayer = soundEffectPlayer,
         )
@@ -196,6 +211,7 @@ private fun GameplayAppScreen(
                 GameOverOverlay(
                     score = state.score,
                     level = state.level,
+                    mode = state.mode,
                     onRestart = { gameViewModel.onRestart() },
                 )
             }
