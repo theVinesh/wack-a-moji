@@ -152,7 +152,7 @@ class GameViewModel internal constructor(
     fun onMoleHit(index: Int) {
         var scoredHit = false
         _uiState.update { state ->
-            if (!state.cells[index] || state.gameOver) return@update state
+            if (!state.cells[index] || state.gameOver || !state.running) return@update state
             scoredHit = true
             state.copy(
                 score = state.score + 1,
@@ -294,6 +294,21 @@ class GameViewModel internal constructor(
             }
 
             delay(DELAY_BETWEEN_MOLES_MS)
+        }
+    }
+
+    companion object {
+        internal fun createForTest(
+            initialState: GameUiState,
+            soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
+        ): GameViewModel {
+            val viewModel = GameViewModel(
+                backgroundMusicAutoplayEnabled = false,
+                soundEffectPlayer = soundEffectPlayer,
+            )
+            viewModel.stopGameLoops()
+            viewModel._uiState.value = initialState
+            return viewModel
         }
     }
 }

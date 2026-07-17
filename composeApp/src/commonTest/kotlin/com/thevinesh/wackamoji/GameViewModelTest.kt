@@ -335,6 +335,27 @@ class GameViewModelTest {
     }
 
     @Test
+    fun onMoleHit_whilePausedDoesNotScoreOrPlayWack() {
+        val player = RecordingSoundEffectPlayer()
+        val cells = List(9) { it == 2 }
+        val vm = GameViewModel.createForTest(
+            initialState = GameUiState(
+                score = 4,
+                running = false,
+                cells = cells,
+                emojis = List(9) { "😎" },
+            ),
+            soundEffectPlayer = player,
+        )
+
+        vm.onMoleHit(2)
+
+        assertEquals(4, vm.uiState.value.score)
+        assertTrue(vm.uiState.value.cells[2])
+        assertTrue(player.playedEffects.isEmpty())
+    }
+
+    @Test
     fun gameOver_doesNotInterruptBackgroundMusic() = runTest(testDispatcher.scheduler) {
         val vm = GameViewModel()
 

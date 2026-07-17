@@ -33,14 +33,26 @@ internal fun buttonClickHandler(
     onClick()
 }
 
+internal fun pauseResumeButtonText(running: Boolean): String =
+    if (running) "Pause" else "Resume"
+
 @Composable
 internal fun ButtonsRow(
+    running: Boolean,
+    onPauseResume: () -> Unit,
     onBack: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
     ) {
+        GameButton(
+            text = pauseResumeButtonText(running),
+            backgroundColor = WackAMojiColors.PauseGreen,
+            shadowColor = WackAMojiColors.PauseShadow,
+            onClick = onPauseResume,
+            modifier = Modifier.weight(1f)
+        )
         GameButton(
             text = "Back",
             backgroundColor = WackAMojiColors.RestartOrange,
@@ -106,7 +118,15 @@ internal fun GameButton(
 @org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 private fun ButtonsRowPreview() {
-    MaterialTheme { Surface { ButtonsRow(onBack = {}) } }
+    MaterialTheme {
+        Surface {
+            ButtonsRow(
+                running = true,
+                onPauseResume = {},
+                onBack = {},
+            )
+        }
+    }
 }
 
 @org.jetbrains.compose.ui.tooling.preview.Preview

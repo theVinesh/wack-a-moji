@@ -36,6 +36,16 @@ class ComposeAppCommonTest {
     }
 
     @Test
+    fun pauseResumeButtonText_showsPauseWhileRunning() {
+        assertEquals("Pause", pauseResumeButtonText(running = true))
+    }
+
+    @Test
+    fun pauseResumeButtonText_showsResumeWhilePaused() {
+        assertEquals("Resume", pauseResumeButtonText(running = false))
+    }
+
+    @Test
     fun buttonClickHandler_playsClickAndRunsActionOnce() {
         val player = RecordingSoundEffectPlayer()
         var actionCount = 0
