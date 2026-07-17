@@ -342,14 +342,15 @@ class GameViewModel internal constructor(
             val maxMoles = maxMolesForLevel(currentLevel)
             val (minTime, maxTime) = moleUpTimeRange(currentLevel)
 
-            val newCells = state.cells.toMutableList()
+            var newCells: MutableList<Boolean>? = null
             var missedCount = 0
 
             // Tick down mole visibility timers
             for (i in 0 until 9) {
-                if (newCells[i]) {
+                if (state.cells[i]) {
                     remaining[i] = (remaining[i] - DELAY_BETWEEN_MOLES_MS).coerceAtLeast(0L)
                     if (remaining[i] == 0L) {
+                        if (newCells == null) newCells = state.cells.toMutableList()
                         newCells[i] = false
                         missedCount++
                     }
@@ -357,25 +358,33 @@ class GameViewModel internal constructor(
             }
 
             // Maybe spawn a new mole
-            val upCount = newCells.count { it }
-            val newEmojis = state.emojis.toMutableList()
+            val cellsToCount = newCells ?: state.cells
+            val upCount = cellsToCount.count { it }
+            var newEmojis: MutableList<String>? = null
             if (upCount < maxMoles) {
                 val idx = Random.nextInt(0, 9)
-                if (!newCells[idx]) {
+                if (!cellsToCount[idx]) {
+                    if (newCells == null) newCells = state.cells.toMutableList()
                     newCells[idx] = true
+                    newEmojis = state.emojis.toMutableList()
                     newEmojis[idx] = randomMoleEmoji()
                     remaining[idx] = Random.nextLong(minTime, maxTime)
                 }
             }
 
-            _uiState.update { s ->
-                if (!s.running || s.gameOver) return@update s
-                applyMoleTimeouts(
-                    state = s,
-                    missedCount = missedCount,
-                    cells = newCells,
-                    emojis = newEmojis,
-                )
+            // Skip state updates when nothing changed this tick (no timeout, no spawn).
+            if (newCells != null || newEmojis != null || missedCount > 0) {
+                val finalCells = newCells ?: state.cells
+                val finalEmojis = newEmojis ?: state.emojis
+                _uiState.update { s ->
+                    if (!s.running || s.gameOver) return@update s
+                    applyMoleTimeouts(
+                        state = s,
+                        missedCount = missedCount,
+                        cells = finalCells,
+                        emojis = finalEmojis,
+                    )
+                }
             }
 
             delay(DELAY_BETWEEN_MOLES_MS)
