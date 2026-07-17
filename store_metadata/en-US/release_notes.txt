@@ -5,3 +5,4 @@ What's new in this update:
 - Combo streaks that award bonus points
 - Optional haptic feedback on every whack
 - Accessibility settings for reduce motion and larger targets
+
