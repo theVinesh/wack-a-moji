@@ -22,6 +22,12 @@ WackAMoji is a Kotlin Multiplatform game for Android and iOS.
 - Use package namespace `com.thevinesh.wackamoji.*`.
 - Avoid new dependencies unless they are clearly necessary.
 
+## Workspace setup
+
+- Run `./scripts/setup.sh` after creating a worktree or cloud agent workspace (Conductor, Jules, etc.).
+- It is non-interactive: checks JDK 17+, makes `gradlew` executable, writes `local.properties` when an Android SDK is found, and warms the Gradle wrapper.
+- Cleanup: `./scripts/archive.sh`
+
 ## Compose & Testing
 
 - Add a deterministic `@Preview` for every new Composable.

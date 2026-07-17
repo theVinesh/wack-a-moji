@@ -33,6 +33,12 @@ This project targets **Android** and **iOS**.
 - Xcode (for iOS development)
 - JDK 17+
 
+For a non-interactive worktree / cloud-agent bootstrap (Conductor, Jules, etc.):
+
+```shell
+./scripts/setup.sh
+```
+
 ### Build and Run Android
 
 To build and run the development version of the Android app, use the run widget in Android Studio or build from the terminal:
