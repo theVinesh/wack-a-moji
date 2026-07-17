@@ -4,5 +4,4 @@ What's new in this update:
 - New Endless mode with three lives
 - Combo streaks that award bonus points
 - Optional haptic feedback on every whack
-- Accessibility settings for reduce motion and larger targets
-
+- Accessibility options for reduce motion and larger targets
