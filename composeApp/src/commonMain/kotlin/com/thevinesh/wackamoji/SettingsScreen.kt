@@ -40,9 +40,13 @@ internal data class SettingsScreenBindings(
     val musicVolume: Float,
     val soundEffectVolume: Float,
     val hapticsEnabled: Boolean,
+    val reduceMotion: Boolean,
+    val largeTargets: Boolean,
     val onMusicVolumeChange: (Float) -> Unit,
     val onSoundEffectVolumeChange: (Float) -> Unit,
     val onHapticsEnabledChange: (Boolean) -> Unit,
+    val onReduceMotionChange: (Boolean) -> Unit,
+    val onLargeTargetsChange: (Boolean) -> Unit,
 )
 
 internal fun settingsScreenBindings(
@@ -56,9 +60,13 @@ internal fun settingsScreenBindings(
         musicVolume = settings.musicVolume,
         soundEffectVolume = settings.soundEffectVolume,
         hapticsEnabled = preferences.hapticsEnabled,
+        reduceMotion = preferences.reduceMotion,
+        largeTargets = preferences.largeTargets,
         onMusicVolumeChange = audioSettingsStore::updateMusicVolume,
         onSoundEffectVolumeChange = audioSettingsStore::updateSoundEffectVolume,
         onHapticsEnabledChange = playerPreferencesStore::updateHapticsEnabled,
+        onReduceMotionChange = playerPreferencesStore::updateReduceMotion,
+        onLargeTargetsChange = playerPreferencesStore::updateLargeTargets,
     )
 }
 
@@ -89,9 +97,13 @@ internal fun SettingsScreen(
             musicVolume = bindings.musicVolume,
             soundEffectVolume = bindings.soundEffectVolume,
             hapticsEnabled = bindings.hapticsEnabled,
+            reduceMotion = bindings.reduceMotion,
+            largeTargets = bindings.largeTargets,
             onMusicVolumeChange = bindings.onMusicVolumeChange,
             onSoundEffectVolumeChange = bindings.onSoundEffectVolumeChange,
             onHapticsEnabledChange = bindings.onHapticsEnabledChange,
+            onReduceMotionChange = bindings.onReduceMotionChange,
+            onLargeTargetsChange = bindings.onLargeTargetsChange,
             onBackToMenu = onBackToMenu,
         )
     }
@@ -102,9 +114,13 @@ internal fun SettingsScreenContent(
     musicVolume: Float,
     soundEffectVolume: Float,
     hapticsEnabled: Boolean,
+    reduceMotion: Boolean,
+    largeTargets: Boolean,
     onMusicVolumeChange: (Float) -> Unit,
     onSoundEffectVolumeChange: (Float) -> Unit,
     onHapticsEnabledChange: (Boolean) -> Unit,
+    onReduceMotionChange: (Boolean) -> Unit,
+    onLargeTargetsChange: (Boolean) -> Unit,
     onBackToMenu: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -130,7 +146,7 @@ internal fun SettingsScreenContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Tune audio and feedback",
+            text = "Tune audio, feedback, and accessibility",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = WackAMojiColors.SkyDark,
@@ -163,6 +179,20 @@ internal fun SettingsScreenContent(
                 checked = hapticsEnabled,
                 accentColor = WackAMojiColors.PauseGreen,
                 onCheckedChange = onHapticsEnabledChange,
+            )
+            ToggleSettingCard(
+                title = "Reduce Motion",
+                description = "Still clouds and instant mole pops",
+                checked = reduceMotion,
+                accentColor = WackAMojiColors.SkyMedium,
+                onCheckedChange = onReduceMotionChange,
+            )
+            ToggleSettingCard(
+                title = "Larger Targets",
+                description = "Bigger buttons and mole holes",
+                checked = largeTargets,
+                accentColor = WackAMojiColors.RestartOrange,
+                onCheckedChange = onLargeTargetsChange,
             )
         }
 
@@ -329,9 +359,13 @@ private fun SettingsScreenContentPreview() {
                 musicVolume = 0.35f,
                 soundEffectVolume = 0.8f,
                 hapticsEnabled = true,
+                reduceMotion = false,
+                largeTargets = true,
                 onMusicVolumeChange = {},
                 onSoundEffectVolumeChange = {},
                 onHapticsEnabledChange = {},
+                onReduceMotionChange = {},
+                onLargeTargetsChange = {},
                 onBackToMenu = {},
             )
         }

@@ -3,12 +3,31 @@ package com.thevinesh.wackamoji
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 data class PlayerPreferences(
     val hapticsEnabled: Boolean = true,
     val reduceMotion: Boolean = false,
     val largeTargets: Boolean = false,
 )
+
+internal fun gameButtonHeight(largeTargets: Boolean): Dp =
+    if (largeTargets) 76.dp else 64.dp
+
+internal fun gameButtonFaceHeight(largeTargets: Boolean): Dp =
+    if (largeTargets) 70.dp else 58.dp
+
+internal fun moleHoleCellPadding(largeTargets: Boolean): Dp =
+    if (largeTargets) 2.dp else 6.dp
+
+internal fun moleEmojiFontSize(largeTargets: Boolean): TextUnit =
+    if (largeTargets) 42.sp else 36.sp
+
+internal fun shouldAnimateClouds(animateClouds: Boolean, reduceMotion: Boolean): Boolean =
+    animateClouds && !reduceMotion
 
 internal interface PlayerPreferencesStorage {
     fun load(): PlayerPreferences

@@ -30,6 +30,9 @@ fun GameGrid(
     onHit: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val largeTargets = LocalPlayerPreferencesStore.current.preferences.largeTargets
+    val holePadding = moleHoleCellPadding(largeTargets)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -71,7 +74,7 @@ fun GameGrid(
                             isUp = cells[index],
                             emoji = emojis[index],
                             onTap = { onHit(index) },
-                            modifier = Modifier.weight(1f).padding(6.dp)
+                            modifier = Modifier.weight(1f).padding(holePadding)
                         )
                     }
                 }

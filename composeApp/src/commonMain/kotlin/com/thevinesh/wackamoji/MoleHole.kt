@@ -37,6 +37,9 @@ fun MoleHole(
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val preferences = LocalPlayerPreferencesStore.current.preferences
+    val emojiSize = moleEmojiFontSize(preferences.largeTargets)
+
     Box(
         modifier = modifier
             .aspectRatio(1f)
@@ -90,23 +93,34 @@ fun MoleHole(
         }
 
         // Emoji appearing in the hole
-        AnimatedVisibility(
-            visible = isUp,
-            enter = scaleIn(
-                animationSpec = tween(150),
-                initialScale = 0.3f
-            ) + fadeIn(animationSpec = tween(150)),
-            exit = scaleOut(
-                animationSpec = tween(150),
-                targetScale = 0.3f
-            ) + fadeOut(animationSpec = tween(150))
-        ) {
-            Text(
-                text = emoji,
-                fontSize = 36.sp,
-                fontFamily = LocalEmojiFont.current,
-                modifier = Modifier.padding(4.dp)
-            )
+        if (preferences.reduceMotion) {
+            if (isUp) {
+                Text(
+                    text = emoji,
+                    fontSize = emojiSize,
+                    fontFamily = LocalEmojiFont.current,
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
+        } else {
+            AnimatedVisibility(
+                visible = isUp,
+                enter = scaleIn(
+                    animationSpec = tween(150),
+                    initialScale = 0.3f
+                ) + fadeIn(animationSpec = tween(150)),
+                exit = scaleOut(
+                    animationSpec = tween(150),
+                    targetScale = 0.3f
+                ) + fadeOut(animationSpec = tween(150))
+            ) {
+                Text(
+                    text = emoji,
+                    fontSize = emojiSize,
+                    fontFamily = LocalEmojiFont.current,
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
         }
     }
 }

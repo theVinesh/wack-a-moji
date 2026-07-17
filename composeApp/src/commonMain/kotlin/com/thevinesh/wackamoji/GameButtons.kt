@@ -72,6 +72,9 @@ internal fun GameButton(
     modifier: Modifier = Modifier,
 ) {
     val soundEffectPlayer = LocalSoundEffectPlayer.current
+    val largeTargets = LocalPlayerPreferencesStore.current.preferences.largeTargets
+    val buttonHeight = gameButtonHeight(largeTargets)
+    val faceHeight = gameButtonFaceHeight(largeTargets)
     val onButtonClick = remember(soundEffectPlayer, onClick) {
         buttonClickHandler(soundEffectPlayer = soundEffectPlayer, onClick = onClick)
     }
@@ -79,7 +82,7 @@ internal fun GameButton(
     // 3D push-style button
     Box(
         modifier = modifier
-            .height(64.dp)
+            .height(buttonHeight)
             .clip(RoundedCornerShape(16.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -99,14 +102,14 @@ internal fun GameButton(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(58.dp)
+                .height(faceHeight)
                 .background(backgroundColor, RoundedCornerShape(16.dp))
                 .border(4.dp, WackAMojiColors.ButtonHighlight, RoundedCornerShape(16.dp)),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = text,
-                fontSize = 18.sp,
+                fontSize = if (largeTargets) 20.sp else 18.sp,
                 fontWeight = FontWeight.Black,
                 color = Color.White,
                 letterSpacing = 1.sp,

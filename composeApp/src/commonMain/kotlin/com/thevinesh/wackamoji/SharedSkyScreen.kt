@@ -43,6 +43,9 @@ internal fun SharedSkyScreen(
     overlay: @Composable BoxScope.() -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val reduceMotion = LocalPlayerPreferencesStore.current.preferences.reduceMotion
+    val cloudsAnimated = shouldAnimateClouds(animateClouds, reduceMotion)
+
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
@@ -55,7 +58,7 @@ internal fun SharedSkyScreen(
             )
         }
 
-        if (animateClouds) {
+        if (cloudsAnimated) {
             CloudsBackground()
         } else {
             Canvas(modifier = Modifier.fillMaxSize()) {

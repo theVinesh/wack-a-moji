@@ -36,4 +36,25 @@ class PlayerPreferencesTest {
             settingsScreenBindings(audioStore, preferencesStore).hapticsEnabled
         })
     }
+
+    @Test
+    fun store_updatesAccessibilityPreferences() {
+        val store = PlayerPreferencesStore(InMemoryPlayerPreferencesStorage())
+
+        store.updateReduceMotion(true)
+        store.updateLargeTargets(true)
+
+        assertTrue(store.preferences.reduceMotion)
+        assertTrue(store.preferences.largeTargets)
+    }
+
+    @Test
+    fun accessibilityHelpers_scaleTargetsAndMotion() {
+        assertEquals(64, gameButtonHeight(largeTargets = false).value.toInt())
+        assertEquals(76, gameButtonHeight(largeTargets = true).value.toInt())
+        assertEquals(6, moleHoleCellPadding(largeTargets = false).value.toInt())
+        assertEquals(2, moleHoleCellPadding(largeTargets = true).value.toInt())
+        assertTrue(shouldAnimateClouds(animateClouds = true, reduceMotion = false))
+        assertFalse(shouldAnimateClouds(animateClouds = true, reduceMotion = true))
+    }
 }

@@ -21,6 +21,8 @@ class SettingsScreenTest {
         assertEquals(0.2f, bindings.musicVolume)
         assertEquals(0.8f, bindings.soundEffectVolume)
         assertEquals(false, bindings.hapticsEnabled)
+        assertEquals(false, bindings.reduceMotion)
+        assertEquals(false, bindings.largeTargets)
     }
 
     @Test
