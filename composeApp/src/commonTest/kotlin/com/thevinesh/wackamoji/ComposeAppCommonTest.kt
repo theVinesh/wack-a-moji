@@ -48,6 +48,13 @@ class ComposeAppCommonTest {
     }
 
     @Test
+    fun formatComboLabel_andVisibility() {
+        assertEquals("x4 COMBO", formatComboLabel(4))
+        assertEquals(false, shouldShowCombo(1))
+        assertEquals(true, shouldShowCombo(2))
+    }
+
+    @Test
     fun appScreenAfterBackToMenu_returnsToMenu() {
         assertEquals(AppScreen.Menu, appScreenAfterBackToMenu())
     }

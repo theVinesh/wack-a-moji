@@ -249,20 +249,21 @@ class GameViewModelTest {
     }
 
     @Test
-    fun applyEndlessMisses_reducesLivesWithoutEnding() {
-        val state = GameUiState(mode = GameMode.Endless, lives = 3, running = true)
+    fun applyMoleTimeouts_reducesLivesWithoutEnding() {
+        val state = GameUiState(mode = GameMode.Endless, lives = 3, running = true, combo = 4)
         val cells = List(9) { false }
         val emojis = List(9) { "😎" }
 
-        val next = applyEndlessMisses(state, missedCount = 1, cells = cells, emojis = emojis)
+        val next = applyMoleTimeouts(state, missedCount = 1, cells = cells, emojis = emojis)
 
         assertEquals(2, next.lives)
+        assertEquals(0, next.combo)
         assertFalse(next.gameOver)
         assertTrue(next.running)
     }
 
     @Test
-    fun applyEndlessMisses_endsGameWhenLivesReachZero() {
+    fun applyMoleTimeouts_endsGameWhenLivesReachZero() {
         val state = GameUiState(
             mode = GameMode.Endless,
             lives = 1,
@@ -272,7 +273,7 @@ class GameViewModelTest {
         val cells = List(9) { false }
         val emojis = List(9) { "😎" }
 
-        val next = applyEndlessMisses(state, missedCount = 1, cells = cells, emojis = emojis)
+        val next = applyMoleTimeouts(state, missedCount = 1, cells = cells, emojis = emojis)
 
         assertEquals(0, next.lives)
         assertTrue(next.gameOver)
@@ -281,16 +282,54 @@ class GameViewModelTest {
     }
 
     @Test
-    fun applyEndlessMisses_ignoresMissesInClassicMode() {
-        val state = GameUiState(mode = GameMode.Classic, lives = 3, running = true)
+    fun applyMoleTimeouts_resetsComboInClassicModeWithoutLosingLives() {
+        val state = GameUiState(mode = GameMode.Classic, lives = 3, running = true, combo = 6)
         val cells = List(9) { it == 1 }
         val emojis = List(9) { "😂" }
 
-        val next = applyEndlessMisses(state, missedCount = 2, cells = cells, emojis = emojis)
+        val next = applyMoleTimeouts(state, missedCount = 2, cells = cells, emojis = emojis)
 
         assertEquals(3, next.lives)
+        assertEquals(0, next.combo)
         assertFalse(next.gameOver)
         assertEquals(cells, next.cells)
+    }
+
+    @Test
+    fun comboBonusPoints_rampsWithStreak() {
+        assertEquals(0, comboBonusPoints(1))
+        assertEquals(0, comboBonusPoints(2))
+        assertEquals(1, comboBonusPoints(3))
+        assertEquals(2, comboBonusPoints(5))
+        assertEquals(3, comboBonusPoints(10))
+    }
+
+    @Test
+    fun pointsForHit_includesComboBonus() {
+        assertEquals(1, pointsForHit(currentCombo = 0))
+        assertEquals(2, pointsForHit(currentCombo = 2)) // next streak 3
+        assertEquals(3, pointsForHit(currentCombo = 4)) // next streak 5
+        assertEquals(4, pointsForHit(currentCombo = 9)) // next streak 10
+    }
+
+    @Test
+    fun onMoleHit_incrementsComboAndBonusScore() {
+        val cells = List(9) { it == 2 }
+        val vm = GameViewModel.createForTest(
+            initialState = GameUiState(
+                score = 10,
+                combo = 2,
+                running = true,
+                cells = cells,
+                emojis = List(9) { "😎" },
+            ),
+        )
+
+        vm.onMoleHit(2)
+
+        assertEquals(3, vm.uiState.value.combo)
+        assertEquals(12, vm.uiState.value.score) // +2 for streak 3
+        assertFalse(vm.uiState.value.cells[2])
     }
 
     @Test

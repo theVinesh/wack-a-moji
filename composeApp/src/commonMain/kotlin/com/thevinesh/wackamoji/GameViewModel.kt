@@ -41,14 +41,27 @@ internal fun freshGameUiState(mode: GameMode): GameUiState = GameUiState(
     lives = ENDLESS_START_LIVES,
 )
 
-internal fun applyEndlessMisses(
+internal fun comboBonusPoints(streak: Int): Int = when {
+    streak >= 10 -> 3
+    streak >= 5 -> 2
+    streak >= 3 -> 1
+    else -> 0
+}
+
+internal fun pointsForHit(currentCombo: Int): Int {
+    val nextCombo = currentCombo + 1
+    return 1 + comboBonusPoints(nextCombo)
+}
+
+internal fun applyMoleTimeouts(
     state: GameUiState,
     missedCount: Int,
     cells: List<Boolean>,
     emojis: List<String>,
 ): GameUiState {
+    val comboAfterMiss = if (missedCount > 0) 0 else state.combo
     if (state.mode != GameMode.Endless || missedCount <= 0) {
-        return state.copy(cells = cells, emojis = emojis)
+        return state.copy(cells = cells, emojis = emojis, combo = comboAfterMiss)
     }
 
     val newLives = (state.lives - missedCount).coerceAtLeast(0)
@@ -57,11 +70,12 @@ internal fun applyEndlessMisses(
             cells = List(9) { false },
             emojis = emojis,
             lives = 0,
+            combo = 0,
             gameOver = true,
             running = false,
         )
     } else {
-        state.copy(cells = cells, emojis = emojis, lives = newLives)
+        state.copy(cells = cells, emojis = emojis, lives = newLives, combo = comboAfterMiss)
     }
 }
 
@@ -162,6 +176,7 @@ data class GameUiState(
     val gameOver: Boolean = false,
     val mode: GameMode = GameMode.Classic,
     val lives: Int = ENDLESS_START_LIVES,
+    val combo: Int = 0,
     val cells: List<Boolean> = List(9) { false },
     val emojis: List<String> = List(9) { randomMoleEmoji() },
 ) {
@@ -207,8 +222,10 @@ class GameViewModel internal constructor(
         _uiState.update { state ->
             if (!state.cells[index] || state.gameOver || !state.running) return@update state
             scoredHit = true
+            val nextCombo = state.combo + 1
             state.copy(
-                score = state.score + 1,
+                score = state.score + pointsForHit(state.combo),
+                combo = nextCombo,
                 cells = state.cells.toMutableList().also { it[index] = false },
             )
         }
@@ -353,7 +370,7 @@ class GameViewModel internal constructor(
 
             _uiState.update { s ->
                 if (!s.running || s.gameOver) return@update s
-                applyEndlessMisses(
+                applyMoleTimeouts(
                     state = s,
                     missedCount = missedCount,
                     cells = newCells,

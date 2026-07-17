@@ -45,7 +45,10 @@ fun GameScreen(
             // Score display
             ScoreDisplay(score = state.score)
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            ComboDisplay(combo = state.combo)
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             when (state.mode) {
                 GameMode.Classic -> TimerSection(
