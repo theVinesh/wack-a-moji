@@ -104,7 +104,8 @@ That matrix captures `gameplay` and `game-over`, which produces the current mini
 - `iosApp/Configuration/Config.xcconfig` defines:
   - `CURRENT_PROJECT_VERSION=1` as the base build-number setting
   - `MARKETING_VERSION=1.0.$(CURRENT_PROJECT_VERSION)`
-- Listing sync is version-neutral: `ios sync_listing` runs `deliver` with `skip_app_version_update: true`.
+- Listing sync does not rewrite an existing Prepare for Submission version string (`skip_app_version_update: true`).
+- If App Store Connect has no editable iOS version, `ios sync_listing` creates one by bumping the live/latest version (or `IOS_APP_STORE_VERSION` when set), then uploads listing metadata to it.
 
 Practical implication: routine release version bumps should come from CI/build-number flow, not from manually rewriting store-listing text.
 
@@ -169,6 +170,7 @@ Platform behavior:
   - does **not** upload a new AAB
 - iOS runs `bundle exec fastlane ios sync_listing`
   - stages metadata/screenshots/release notes from `store_metadata/`
+  - ensures an editable App Store version exists (creates one if needed)
   - runs `deliver` with `skip_binary_upload: true`
   - does **not** submit for review
 

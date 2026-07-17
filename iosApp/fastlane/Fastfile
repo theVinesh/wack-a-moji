@@ -60,6 +60,64 @@ def match_options(api_key)
   options
 end
 
+# App Store listing metadata lives on an editable version. When only a live
+# version exists, deliver fails with "could not find an editable version".
+def bump_ios_version_string(version_string)
+  parts = version_string.to_s.split(".")
+  if parts.last.to_s.match?(/^\d+$/)
+    parts[-1] = (parts.last.to_i + 1).to_s
+    parts.join(".")
+  else
+    "#{version_string}.1"
+  end
+end
+
+def next_editable_ios_version_string(app, platform:)
+  explicit = ENV["IOS_APP_STORE_VERSION"].to_s.strip
+  return explicit unless explicit.empty?
+
+  base = app.get_live_app_store_version(platform: platform) ||
+         app.get_latest_app_store_version(platform: platform)
+  UI.user_error!("No App Store version found to base a new editable version on for #{ios_app_identifier}") unless base
+
+  bump_ios_version_string(base.version_string)
+end
+
+def wait_for_editable_ios_version!(app, platform:, attempts: 8)
+  wait_time = 10
+  attempts.times do |index|
+    edit_version = app.get_edit_app_store_version(platform: platform)
+    return edit_version if edit_version
+
+    remaining = attempts - index - 1
+    break if remaining.zero?
+
+    sleep_time = [wait_time, 5 * 60].min
+    UI.message("Waiting for editable App Store version... Retrying after #{sleep_time} seconds (remaining: #{remaining})")
+    sleep(sleep_time)
+    wait_time *= 2
+  end
+
+  UI.user_error!("Timed out waiting for an editable App Store version for #{ios_app_identifier}")
+end
+
+def ensure_editable_ios_app_store_version!
+  app = Spaceship::ConnectAPI::App.find(ios_app_identifier)
+  UI.user_error!("Could not find App Store Connect app for #{ios_app_identifier}") unless app
+
+  platform = Spaceship::ConnectAPI::Platform::IOS
+  edit_version = app.get_edit_app_store_version(platform: platform)
+  if edit_version
+    UI.message("Using existing editable App Store version #{edit_version.version_string}")
+    return edit_version.version_string
+  end
+
+  version_string = next_editable_ios_version_string(app, platform: platform)
+  UI.message("No editable App Store version found; creating #{version_string}")
+  app.ensure_version!(version_string, platform: platform)
+  wait_for_editable_ios_version!(app, platform: platform).version_string
+end
+
 platform :ios do
   desc "Sync App Store metadata into fastlane/metadata"
   lane :sync_metadata do
@@ -145,6 +203,7 @@ platform :ios do
     end
 
     api_key = app_store_api_key
+    ensure_editable_ios_app_store_version!
 
     sync_metadata
     sync_screenshots
@@ -152,6 +211,8 @@ platform :ios do
     metadata_path = File.expand_path("metadata", __dir__)
     screenshots_path = File.expand_path("screenshots", __dir__)
 
+    # skip_app_version_update keeps listing sync from rewriting an existing
+    # Prepare for Submission version string; we only create one when missing.
     deliver_options = {
       api_key: api_key,
       app_identifier: ios_app_identifier,
