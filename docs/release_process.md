@@ -17,6 +17,7 @@ This is the canonical repo guide for shipping WackAMoji on both Android and iOS.
 | --- | --- | --- | --- |
 | Shared app name | `store_metadata/en-US/name.txt` | Synced to Play title | Synced to App Store name |
 | Shared long description | `store_metadata/en-US/description.txt` | Synced to Play full description | Synced to App Store description |
+| Shared release notes | `store_metadata/en-US/release_notes.txt` | Synced to Play changelogs (`default.txt`) | Synced to App Store release notes |
 | Android-only short description | `store_metadata/en-US/short_description.txt` | Synced to Play short description | Not used |
 | iOS-only listing fields | `store_metadata/ios/metadata/en-US/` | Not used | Synced to App Store metadata |
 | Android listing images | `store_metadata/assets/feature_graphic.png`, `store_metadata/assets/icon_512.png` | Synced to Play | Not used |
@@ -28,7 +29,7 @@ Current iOS-only metadata includes `subtitle`, `promotional_text`, `keywords`, `
 
 ### Important ownership notes
 
-- The overlapping cross-store copy is currently `name.txt` and `description.txt`.
+- The overlapping cross-store copy is currently `name.txt`, `description.txt`, and `release_notes.txt`.
 - Android keeps its own `short_description.txt`.
 - iOS App Store-only fields live under `store_metadata/ios/metadata/en-US/`.
 - The checked-in `store_metadata/en-US/keywords.txt` is **not** part of the current automated release path. Treat `store_metadata/ios/metadata/en-US/keywords.txt` as the active iOS keywords source unless the automation is changed later.

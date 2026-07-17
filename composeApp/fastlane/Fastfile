@@ -37,6 +37,8 @@ platform :android do
     sh "cp '#{File.join(shared_path, 'en-US', 'name.txt')}' '#{File.join(locale_path, 'title.txt')}'"
     sh "cp '#{File.join(shared_path, 'en-US', 'short_description.txt')}' '#{File.join(locale_path, 'short_description.txt')}'"
     sh "cp '#{File.join(shared_path, 'en-US', 'description.txt')}' '#{File.join(locale_path, 'full_description.txt')}'"
+    sh "mkdir -p '#{File.join(locale_path, 'changelogs')}'"
+    sh "cp '#{File.join(shared_path, 'en-US', 'release_notes.txt')}' '#{File.join(locale_path, 'changelogs', 'default.txt')}'"
     sh "cp '#{File.join(shared_path, 'assets', 'feature_graphic.png')}' '#{File.join(images_path, 'featureGraphic.png')}'"
     sh "cp '#{File.join(shared_path, 'assets', 'icon_512.png')}' '#{File.join(images_path, 'icon.png')}'"
 
@@ -60,7 +62,7 @@ platform :android do
       metadata_path: metadata_path,
       skip_upload_apk: true,
       skip_upload_aab: true,
-      skip_upload_changelogs: true,
+      skip_upload_changelogs: false,
       sync_image_upload: true
     )
   end

@@ -75,6 +75,7 @@ platform :ios do
     sh "mkdir -p '#{locale_path}'"
     sh "cp '#{File.join(shared_locale_path, 'name.txt')}' '#{File.join(locale_path, 'name.txt')}'"
     sh "cp '#{File.join(shared_locale_path, 'description.txt')}' '#{File.join(locale_path, 'description.txt')}'"
+    sh "cp '#{File.join(shared_locale_path, 'release_notes.txt')}' '#{File.join(locale_path, 'release_notes.txt')}'"
   end
 
   desc "Sync shared App Store screenshots into fastlane/screenshots"
