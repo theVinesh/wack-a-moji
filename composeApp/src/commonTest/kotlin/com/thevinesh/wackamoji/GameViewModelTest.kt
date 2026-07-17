@@ -380,9 +380,11 @@ class GameViewModelTest {
     @Test
     fun onMoleHit_visibleMoleIncrementsScore_andPlaysWackOnce() {
         val player = RecordingSoundEffectPlayer()
+        val haptics = RecordingHapticFeedback()
         val vm = GameViewModel(
             screenshotScenario = ScreenshotScenario.Gameplay,
             soundEffectPlayer = player,
+            hapticFeedback = haptics,
         )
         val initialBackgroundMusicPlayback = vm.backgroundMusicState.value.playback
 
@@ -391,7 +393,23 @@ class GameViewModelTest {
         assertEquals(13, vm.uiState.value.score)
         assertFalse(vm.uiState.value.cells[2])
         assertEquals(listOf(SoundEffect.Wack), player.playedEffects)
+        assertEquals(1, haptics.impactCount)
         assertEquals(initialBackgroundMusicPlayback, vm.backgroundMusicState.value.playback)
+    }
+
+    @Test
+    fun onMoleHit_skipsHapticsWhenDisabled() {
+        val haptics = RecordingHapticFeedback()
+        val vm = GameViewModel(
+            screenshotScenario = ScreenshotScenario.Gameplay,
+            hapticFeedback = haptics,
+            hapticsEnabled = { false },
+        )
+
+        vm.onMoleHit(2)
+
+        assertEquals(13, vm.uiState.value.score)
+        assertEquals(0, haptics.impactCount)
     }
 
     @Test
@@ -496,5 +514,14 @@ class GameViewModelTest {
         override fun setVolume(volume: Float) = Unit
 
         override fun dispose() = Unit
+    }
+
+    private class RecordingHapticFeedback : HapticFeedback {
+        var impactCount = 0
+            private set
+
+        override fun performLightImpact() {
+            impactCount++
+        }
     }
 }

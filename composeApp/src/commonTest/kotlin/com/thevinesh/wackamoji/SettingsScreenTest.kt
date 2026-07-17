@@ -12,17 +12,22 @@ class SettingsScreenTest {
                 AudioSettings(musicVolume = 0.2f, soundEffectVolume = 0.8f)
             )
         )
+        val preferencesStore = PlayerPreferencesStore(
+            InMemoryPlayerPreferencesStorage(PlayerPreferences(hapticsEnabled = false)),
+        )
 
-        val bindings = settingsScreenBindings(store)
+        val bindings = settingsScreenBindings(store, preferencesStore)
 
         assertEquals(0.2f, bindings.musicVolume)
         assertEquals(0.8f, bindings.soundEffectVolume)
+        assertEquals(false, bindings.hapticsEnabled)
     }
 
     @Test
     fun settingsScreenBindings_callbacksUpdatePersistedAudioSettings() {
         val store = AudioSettingsStore(InMemoryAudioSettingsStorage())
-        val bindings = settingsScreenBindings(store)
+        val preferencesStore = PlayerPreferencesStore(InMemoryPlayerPreferencesStorage())
+        val bindings = settingsScreenBindings(store, preferencesStore)
 
         bindings.onMusicVolumeChange(0.15f)
         bindings.onSoundEffectVolumeChange(0.65f)

@@ -176,6 +176,8 @@ class GameViewModel internal constructor(
     private val mode: GameMode = GameMode.Classic,
     private val backgroundMusicAutoplayEnabled: Boolean = screenshotScenario == null,
     private val soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
+    private val hapticFeedback: HapticFeedback = NoOpHapticFeedback,
+    private val hapticsEnabled: () -> Boolean = { true },
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(initialGameUiState(screenshotScenario, mode))
@@ -212,6 +214,9 @@ class GameViewModel internal constructor(
         }
         if (scoredHit) {
             soundEffectPlayer.play(SoundEffect.Wack)
+            if (hapticsEnabled()) {
+                hapticFeedback.performLightImpact()
+            }
         }
     }
 
@@ -364,11 +369,15 @@ class GameViewModel internal constructor(
         internal fun createForTest(
             initialState: GameUiState,
             soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
+            hapticFeedback: HapticFeedback = NoOpHapticFeedback,
+            hapticsEnabled: () -> Boolean = { true },
         ): GameViewModel {
             val viewModel = GameViewModel(
                 mode = initialState.mode,
                 backgroundMusicAutoplayEnabled = false,
                 soundEffectPlayer = soundEffectPlayer,
+                hapticFeedback = hapticFeedback,
+                hapticsEnabled = hapticsEnabled,
             )
             viewModel.stopGameLoops()
             viewModel._uiState.value = initialState

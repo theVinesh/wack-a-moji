@@ -40,13 +40,21 @@ class MainActivity : ComponentActivity() {
             val leaderboardStore = remember(applicationContext) {
                 LeaderboardStore(AndroidLeaderboardStorage(applicationContext))
             }
+            val playerPreferencesStore = remember(applicationContext) {
+                PlayerPreferencesStore(AndroidPlayerPreferencesStorage(applicationContext))
+            }
+            val hapticFeedback = remember(applicationContext) {
+                AndroidHapticFeedback(applicationContext)
+            }
 
             App(
                 screenshotScenario = screenshotScenario,
                 backgroundMusicController = backgroundMusicController,
                 soundEffectPlayer = soundEffectPlayer,
+                hapticFeedback = hapticFeedback,
                 audioSettingsStore = audioSettingsStore,
                 leaderboardStore = leaderboardStore,
+                playerPreferencesStore = playerPreferencesStore,
             )
         }
     }

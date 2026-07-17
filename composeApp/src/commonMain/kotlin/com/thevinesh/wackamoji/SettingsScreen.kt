@@ -2,6 +2,8 @@ package com.thevinesh.wackamoji
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,11 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -33,18 +39,26 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 internal data class SettingsScreenBindings(
     val musicVolume: Float,
     val soundEffectVolume: Float,
+    val hapticsEnabled: Boolean,
     val onMusicVolumeChange: (Float) -> Unit,
     val onSoundEffectVolumeChange: (Float) -> Unit,
+    val onHapticsEnabledChange: (Boolean) -> Unit,
 )
 
-internal fun settingsScreenBindings(audioSettingsStore: AudioSettingsStore): SettingsScreenBindings {
+internal fun settingsScreenBindings(
+    audioSettingsStore: AudioSettingsStore,
+    playerPreferencesStore: PlayerPreferencesStore,
+): SettingsScreenBindings {
     val settings = audioSettingsStore.settings
+    val preferences = playerPreferencesStore.preferences
 
     return SettingsScreenBindings(
         musicVolume = settings.musicVolume,
         soundEffectVolume = settings.soundEffectVolume,
+        hapticsEnabled = preferences.hapticsEnabled,
         onMusicVolumeChange = audioSettingsStore::updateMusicVolume,
         onSoundEffectVolumeChange = audioSettingsStore::updateSoundEffectVolume,
+        onHapticsEnabledChange = playerPreferencesStore::updateHapticsEnabled,
     )
 }
 
@@ -62,7 +76,10 @@ internal fun SettingsScreen(
     modifier: Modifier = Modifier,
     animateClouds: Boolean = true,
 ) {
-    val bindings = settingsScreenBindings(LocalAudioSettingsStore.current)
+    val bindings = settingsScreenBindings(
+        audioSettingsStore = LocalAudioSettingsStore.current,
+        playerPreferencesStore = LocalPlayerPreferencesStore.current,
+    )
 
     SharedSkyScreen(
         modifier = modifier,
@@ -71,8 +88,10 @@ internal fun SettingsScreen(
         SettingsScreenContent(
             musicVolume = bindings.musicVolume,
             soundEffectVolume = bindings.soundEffectVolume,
+            hapticsEnabled = bindings.hapticsEnabled,
             onMusicVolumeChange = bindings.onMusicVolumeChange,
             onSoundEffectVolumeChange = bindings.onSoundEffectVolumeChange,
+            onHapticsEnabledChange = bindings.onHapticsEnabledChange,
             onBackToMenu = onBackToMenu,
         )
     }
@@ -82,8 +101,10 @@ internal fun SettingsScreen(
 internal fun SettingsScreenContent(
     musicVolume: Float,
     soundEffectVolume: Float,
+    hapticsEnabled: Boolean,
     onMusicVolumeChange: (Float) -> Unit,
     onSoundEffectVolumeChange: (Float) -> Unit,
+    onHapticsEnabledChange: (Boolean) -> Unit,
     onBackToMenu: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -91,10 +112,11 @@ internal fun SettingsScreenContent(
         modifier = modifier
             .safeContentPadding()
             .fillMaxSize()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 24.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.weight(0.7f))
+        Spacer(modifier = Modifier.height(48.dp))
 
         Text(
             text = "SETTINGS",
@@ -108,7 +130,7 @@ internal fun SettingsScreenContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Adjust your game audio",
+            text = "Tune audio and feedback",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = WackAMojiColors.SkyDark,
@@ -135,9 +157,16 @@ internal fun SettingsScreenContent(
                 accentColor = WackAMojiColors.LeaderboardPurple,
                 onVolumeChange = onSoundEffectVolumeChange,
             )
+            ToggleSettingCard(
+                title = "Haptics",
+                description = "Vibrate on each mole whack",
+                checked = hapticsEnabled,
+                accentColor = WackAMojiColors.PauseGreen,
+                onCheckedChange = onHapticsEnabledChange,
+            )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
 
         GameButton(
             text = "Back to Menu",
@@ -214,6 +243,66 @@ private fun VolumeSettingCard(
     }
 }
 
+@Composable
+internal fun ToggleSettingCard(
+    title: String,
+    description: String,
+    checked: Boolean,
+    accentColor: Color,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = Color.White.copy(alpha = 0.9f),
+                shape = RoundedCornerShape(24.dp),
+            )
+            .border(
+                width = 2.dp,
+                color = WackAMojiColors.ButtonHighlight,
+                shape = RoundedCornerShape(24.dp),
+            )
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { onCheckedChange(!checked) },
+            )
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
+                color = WackAMojiColors.SkyDark,
+            )
+            Text(
+                text = description,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = WackAMojiColors.SkyMedium,
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = accentColor,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = accentColor.copy(alpha = 0.35f),
+            ),
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun VolumeSettingCardPreview() {
@@ -239,8 +328,10 @@ private fun SettingsScreenContentPreview() {
             SettingsScreenContent(
                 musicVolume = 0.35f,
                 soundEffectVolume = 0.8f,
+                hapticsEnabled = true,
                 onMusicVolumeChange = {},
                 onSoundEffectVolumeChange = {},
+                onHapticsEnabledChange = {},
                 onBackToMenu = {},
             )
         }
@@ -253,10 +344,16 @@ private fun SettingsScreenPreview() {
     val audioSettingsStore = remember {
         AudioSettingsStore(InMemoryAudioSettingsStorage(SETTINGS_SCREEN_PREVIEW_AUDIO_SETTINGS))
     }
+    val playerPreferencesStore = remember {
+        PlayerPreferencesStore(InMemoryPlayerPreferencesStorage())
+    }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            CompositionLocalProvider(LocalAudioSettingsStore provides audioSettingsStore) {
+            CompositionLocalProvider(
+                LocalAudioSettingsStore provides audioSettingsStore,
+                LocalPlayerPreferencesStore provides playerPreferencesStore,
+            ) {
                 SettingsScreen(
                     onBackToMenu = {},
                     animateClouds = false,

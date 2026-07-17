@@ -18,14 +18,18 @@ fun main() {
         val backgroundMusicController = remember { WasmBackgroundMusicController() }
         val soundEffectPlayer = remember { WasmSoundEffectPlayer() }
         val leaderboardStore = remember { LeaderboardStore(WasmLeaderboardStorage()) }
+        val playerPreferencesStore = remember { PlayerPreferencesStore(WasmPlayerPreferencesStorage()) }
+        val hapticFeedback = remember { WasmHapticFeedback() }
 
         CompositionLocalProvider(LocalEmojiFont provides emojiFontFamily) {
             App(
                 screenshotScenario = null,
                 backgroundMusicController = backgroundMusicController,
                 soundEffectPlayer = soundEffectPlayer,
+                hapticFeedback = hapticFeedback,
                 audioSettingsStore = audioSettingsStore,
                 leaderboardStore = leaderboardStore,
+                playerPreferencesStore = playerPreferencesStore,
             )
             // Signal JS that fonts + UI are ready
             androidx.compose.runtime.LaunchedEffect(Unit) { dismissLoader() }

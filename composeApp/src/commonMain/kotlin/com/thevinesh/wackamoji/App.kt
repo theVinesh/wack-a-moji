@@ -24,6 +24,10 @@ internal val LocalAudioSettingsStore = compositionLocalOf<AudioSettingsStore> {
     AudioSettingsStore(InMemoryAudioSettingsStorage())
 }
 val LocalSoundEffectPlayer = compositionLocalOf<SoundEffectPlayer> { NoOpSoundEffectPlayer }
+internal val LocalPlayerPreferencesStore = compositionLocalOf<PlayerPreferencesStore> {
+    PlayerPreferencesStore(InMemoryPlayerPreferencesStorage())
+}
+val LocalHapticFeedback = compositionLocalOf<HapticFeedback> { NoOpHapticFeedback }
 
 internal enum class AppScreen {
     Menu,
@@ -64,13 +68,18 @@ fun App() {
     val leaderboardStore = remember {
         LeaderboardStore(InMemoryLeaderboardStorage())
     }
+    val playerPreferencesStore = remember {
+        PlayerPreferencesStore(InMemoryPlayerPreferencesStorage())
+    }
 
     App(
         screenshotScenario = null,
         backgroundMusicController = NoOpBackgroundMusicController,
         soundEffectPlayer = NoOpSoundEffectPlayer,
+        hapticFeedback = NoOpHapticFeedback,
         audioSettingsStore = audioSettingsStore,
         leaderboardStore = leaderboardStore,
+        playerPreferencesStore = playerPreferencesStore,
     )
 }
 
@@ -87,13 +96,16 @@ fun App(
 ) {
     val audioSettingsStore = remember { AudioSettingsStore(InMemoryAudioSettingsStorage()) }
     val leaderboardStore = remember { LeaderboardStore(InMemoryLeaderboardStorage()) }
+    val playerPreferencesStore = remember { PlayerPreferencesStore(InMemoryPlayerPreferencesStorage()) }
 
     App(
         screenshotScenario = null,
         backgroundMusicController = backgroundMusicController,
         soundEffectPlayer = soundEffectPlayer,
+        hapticFeedback = NoOpHapticFeedback,
         audioSettingsStore = audioSettingsStore,
         leaderboardStore = leaderboardStore,
+        playerPreferencesStore = playerPreferencesStore,
     )
 }
 
@@ -102,8 +114,10 @@ internal fun App(
     screenshotScenario: ScreenshotScenario?,
     backgroundMusicController: BackgroundMusicController = NoOpBackgroundMusicController,
     soundEffectPlayer: SoundEffectPlayer = NoOpSoundEffectPlayer,
+    hapticFeedback: HapticFeedback = NoOpHapticFeedback,
     audioSettingsStore: AudioSettingsStore,
     leaderboardStore: LeaderboardStore,
+    playerPreferencesStore: PlayerPreferencesStore,
 ) {
     var appScreen by remember { mutableStateOf(initialAppScreen(screenshotScenario)) }
     var selectedGameMode by remember { mutableStateOf(GameMode.Classic) }
@@ -124,6 +138,8 @@ internal fun App(
         LocalAudioSettingsStore provides audioSettingsStore,
         LocalLeaderboardStore provides leaderboardStore,
         LocalSoundEffectPlayer provides soundEffectPlayer,
+        LocalPlayerPreferencesStore provides playerPreferencesStore,
+        LocalHapticFeedback provides hapticFeedback,
     ) {
         MaterialTheme {
             when (appScreen) {
@@ -179,12 +195,16 @@ private fun GameplayAppScreen(
     }
 
     val backgroundMusicAutoplayEnabled = !LocalInspectionMode.current && screenshotScenario == null
+    val playerPreferencesStore = LocalPlayerPreferencesStore.current
+    val hapticFeedback = LocalHapticFeedback.current
     val gameViewModel = viewModel(viewModelStoreOwner = gameplayViewModelStoreOwner) {
         GameViewModel(
             screenshotScenario = screenshotScenario,
             mode = gameMode,
             backgroundMusicAutoplayEnabled = backgroundMusicAutoplayEnabled,
             soundEffectPlayer = soundEffectPlayer,
+            hapticFeedback = hapticFeedback,
+            hapticsEnabled = { playerPreferencesStore.preferences.hapticsEnabled },
         )
     }
     val state by gameViewModel.uiState.collectAsState()
