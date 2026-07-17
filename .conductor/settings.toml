@@ -1,0 +1,62 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+# Shared Conductor project settings for WackAMoji (KMP Compose: Android, iOS, wasm/web).
+# Machine-specific overrides belong in .conductor/settings.local.toml.
+# User-wide settings (models, git.branch_prefix_type, etc.) stay in ~/.conductor/settings.toml.
+
+# Copy gitignored Android SDK path into each new worktree from the repo root.
+file_include_globs = """
+local.properties
+"""
+
+[[preview_urls]]
+name = "Web"
+url = "http://127.0.0.1:$CONDUCTOR_PORT"
+
+[scripts]
+# Non-interactive workspace prep: SDK path + Gradle wrapper check.
+setup = """
+set -euo pipefail
+chmod +x gradlew
+if [ ! -f local.properties ]; then
+  if [ -n "${ANDROID_HOME:-}" ] && [ -d "$ANDROID_HOME" ]; then
+    printf 'sdk.dir=%s\\n' "$ANDROID_HOME" > local.properties
+  elif [ -d "$HOME/Library/Android/sdk" ]; then
+    printf 'sdk.dir=%s\\n' "$HOME/Library/Android/sdk" > local.properties
+  else
+    echo "warning: local.properties missing and Android SDK not found; Android Gradle tasks may fail" >&2
+  fi
+fi
+./gradlew --version
+"""
+
+# Wasm webpack uses CONDUCTOR_PORT (see composeApp/build.gradle.kts). Android assemble is workspace-local.
+run_mode = "concurrent"
+
+# Drop regenerable workspace artifacts.
+archive = """
+set -euo pipefail
+./gradlew --stop || true
+rm -rf .gradle .kotlin build composeApp/build
+"""
+
+[scripts.run.web]
+command = "./gradlew :composeApp:wasmJsBrowserDevelopmentRun"
+default = true
+icon = "globe"
+available_in = ["local", "cloud"]
+
+[scripts.run.test]
+command = "./gradlew test"
+icon = "test-tube"
+available_in = ["local", "cloud"]
+
+[scripts.run.android-debug]
+command = "./gradlew :composeApp:assembleDebug"
+icon = "package"
+available_in = ["local", "cloud"]
+
+[scripts.run.android-install]
+command = "./gradlew :composeApp:installDebug"
+icon = "smartphone"
+available_in = "local"
