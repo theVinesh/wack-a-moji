@@ -164,10 +164,11 @@ Workflow: `.github/workflows/store-metadata-sync.yml`
 Platform behavior:
 
 - Android runs `bundle exec fastlane android sync_listings`
-  - uploads metadata, graphics, and screenshots
+  - uploads metadata, graphics, screenshots, and release notes/changelogs
+  - pins changelogs to the newest `versionCode` already on the selected Play track (or `ANDROID_PLAY_VERSION_CODE` when set)
   - does **not** upload a new AAB
 - iOS runs `bundle exec fastlane ios sync_listing`
-  - stages metadata/screenshots from `store_metadata/`
+  - stages metadata/screenshots/release notes from `store_metadata/`
   - runs `deliver` with `skip_binary_upload: true`
   - does **not** submit for review
 
