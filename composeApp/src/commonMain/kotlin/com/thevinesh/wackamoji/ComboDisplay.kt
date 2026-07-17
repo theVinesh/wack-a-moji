@@ -14,25 +14,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-internal fun formatComboLabel(combo: Int): String = "x$combo COMBO"
+/** Always show a combo label so the HUD never jumps when a streak starts or breaks. */
+internal fun formatComboLabel(combo: Int): String =
+    if (combo <= 0) "NO COMBO" else "x$combo COMBO"
 
-internal fun shouldShowCombo(combo: Int): Boolean = combo >= 2
+/** Streaks of 2+ are "live" — brighter chrome; 0–1 stay muted but still occupy space. */
+internal fun isComboActive(combo: Int): Boolean = combo >= 2
 
 @Composable
 internal fun ComboDisplay(
     combo: Int,
     modifier: Modifier = Modifier,
 ) {
-    if (!shouldShowCombo(combo)) return
+    val active = isComboActive(combo)
+    val textColor = if (active) {
+        WackAMojiColors.Primary
+    } else {
+        WackAMojiColors.SkyMedium.copy(alpha = 0.55f)
+    }
+    val background = if (active) {
+        Color.White.copy(alpha = 0.92f)
+    } else {
+        Color.White.copy(alpha = 0.55f)
+    }
+    val borderColor = if (active) {
+        WackAMojiColors.ScoreBadgeBorder
+    } else {
+        WackAMojiColors.SkyMedium.copy(alpha = 0.18f)
+    }
 
     Text(
         text = formatComboLabel(combo),
         fontSize = 16.sp,
         fontWeight = FontWeight.Black,
-        color = WackAMojiColors.Primary,
+        color = textColor,
         modifier = modifier
-            .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(50))
-            .border(2.dp, WackAMojiColors.ScoreBadgeBorder, RoundedCornerShape(50))
+            .background(background, RoundedCornerShape(50))
+            .border(2.dp, borderColor, RoundedCornerShape(50))
             .padding(horizontal = 14.dp, vertical = 6.dp),
     )
 }
@@ -41,4 +59,10 @@ internal fun ComboDisplay(
 @Composable
 private fun ComboDisplayPreview() {
     MaterialTheme { Surface { ComboDisplay(combo = 5) } }
+}
+
+@org.jetbrains.compose.ui.tooling.preview.Preview
+@Composable
+private fun ComboDisplayIdlePreview() {
+    MaterialTheme { Surface { ComboDisplay(combo = 0) } }
 }
