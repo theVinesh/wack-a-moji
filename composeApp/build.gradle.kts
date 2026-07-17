@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.gradle.api.tasks.Copy
 
 private val githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
@@ -39,7 +40,18 @@ kotlin {
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        browser()
+        browser {
+            commonWebpackConfig {
+                // Honor Conductor workspace ports when set; otherwise keep webpack defaults.
+                val conductorPort = System.getenv("CONDUCTOR_PORT")?.toIntOrNull()
+                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+                    open = false
+                    if (conductorPort != null) {
+                        port = conductorPort
+                    }
+                }
+            }
+        }
         binaries.executable()
     }
 
