@@ -213,12 +213,15 @@ data class GameUiState(
     val lives: Int = ENDLESS_START_LIVES,
     val combo: Int = 0,
     val cells: List<CellState> = List(9) { CellState() },
-    val powerUpSlowdownEndTime: Long? = null,
-    val powerUpFreezeEndTime: Long? = null,
+    val powerUpSlowdownTicksRemaining: Int = 0,
+    val powerUpFreezeTicksRemaining: Int = 0,
 ) {
     val level: Int get() = calculateLevel(score)
     val timerFraction: Float get() = timeLeft.toFloat() / GAME_DURATION_SECONDS.toFloat()
 }
+
+internal const val TICKS_PER_SECOND = 1000 / DELAY_BETWEEN_MOLES_MS.toInt()
+internal const val POWER_UP_DURATION_TICKS = 10 * TICKS_PER_SECOND
 
 // ─── ViewModel ───────────────────────────────────────────────────────────────
 
@@ -294,12 +297,10 @@ class GameViewModel internal constructor(
             }
         }
         PowerUpType.Slowdown -> {
-            val endTime = System.currentTimeMillis() + 10_000
-            state.copy(powerUpSlowdownEndTime = endTime)
+            state.copy(powerUpSlowdownTicksRemaining = POWER_UP_DURATION_TICKS)
         }
         PowerUpType.Freeze -> {
-            val endTime = System.currentTimeMillis() + 10_000
-            state.copy(powerUpFreezeEndTime = endTime)
+            state.copy(powerUpFreezeTicksRemaining = POWER_UP_DURATION_TICKS)
         }
     }
 
@@ -407,10 +408,9 @@ class GameViewModel internal constructor(
             val currentLevel = state.level
             val maxMoles = maxMolesForLevel(currentLevel)
             
-            // Apply slowdown effect if active
-            val now = System.currentTimeMillis()
-            val isSlowdownActive = state.powerUpSlowdownEndTime?.let { it > now } ?: false
-            val isFreezeActive = state.powerUpFreezeEndTime?.let { it > now } ?: false
+            // Check if power-ups are active and tick them down
+            val isSlowdownActive = state.powerUpSlowdownTicksRemaining > 0
+            val isFreezeActive = state.powerUpFreezeTicksRemaining > 0
             
             val (minTime, maxTime) = moleUpTimeRange(currentLevel)
             val adjustedMinTime = if (isSlowdownActive) minTime * 2 else minTime
@@ -482,15 +482,20 @@ class GameViewModel internal constructor(
                 }
             }
 
-            // Skip state updates when nothing changed this tick (no timeout, no spawn).
-            if (newCells != null || missedCount > 0) {
+            // Update state and tick down power-up timers
+            if (newCells != null || missedCount > 0 || isSlowdownActive || isFreezeActive) {
                 val finalCells = newCells ?: state.cells
                 _uiState.update { s ->
                     if (!s.running || s.gameOver) return@update s
-                    applyMoleTimeouts(
+                    val updated = applyMoleTimeouts(
                         state = s,
                         missedCount = missedCount,
                         cells = finalCells,
+                    )
+                    // Decrement power-up ticks
+                    updated.copy(
+                        powerUpSlowdownTicksRemaining = (updated.powerUpSlowdownTicksRemaining - 1).coerceAtLeast(0),
+                        powerUpFreezeTicksRemaining = (updated.powerUpFreezeTicksRemaining - 1).coerceAtLeast(0),
                     )
                 }
             }
