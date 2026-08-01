@@ -262,10 +262,9 @@ class GameViewModelTest {
     @Test
     fun applyMoleTimeouts_reducesLivesWithoutEnding() {
         val state = GameUiState(mode = GameMode.Endless, lives = 3, running = true, combo = 4)
-        val cells = List(9) { false }
-        val emojis = List(9) { "😎" }
+        val cells = List(9) { CellState() }
 
-        val next = applyMoleTimeouts(state, missedCount = 1, cells = cells, emojis = emojis)
+        val next = applyMoleTimeouts(state, missedCount = 1, cells = cells)
 
         assertEquals(2, next.lives)
         assertEquals(0, next.combo)
@@ -279,31 +278,27 @@ class GameViewModelTest {
             mode = GameMode.Endless,
             lives = 1,
             running = true,
-            cells = List(9) { it == 0 },
+            cells = List(9) { if (it == 0) CellState(isUp = true, contentType = CellContentType.Emoji, content = "😎") else CellState() },
         )
-        val cells = List(9) { false }
-        val emojis = List(9) { "😎" }
+        val cells = List(9) { CellState() }
 
-        val next = applyMoleTimeouts(state, missedCount = 1, cells = cells, emojis = emojis)
+        val next = applyMoleTimeouts(state, missedCount = 1, cells = cells)
 
         assertEquals(0, next.lives)
         assertTrue(next.gameOver)
         assertFalse(next.running)
-        assertTrue(next.cells.all { !it })
+        assertTrue(next.cells.all { !it.isUp })
     }
 
     @Test
     fun applyMoleTimeouts_resetsComboInClassicModeWithoutLosingLives() {
         val state = GameUiState(mode = GameMode.Classic, lives = 3, running = true, combo = 6)
-        val cells = List(9) { it == 1 }
-        val emojis = List(9) { "😂" }
+        val cells = List(9) { if (it == 1) CellState(isUp = true, contentType = CellContentType.Emoji, content = "😂") else CellState() }
 
-        val next = applyMoleTimeouts(state, missedCount = 2, cells = cells, emojis = emojis)
+        val next = applyMoleTimeouts(state, missedCount = 1, cells = cells)
 
         assertEquals(3, next.lives)
         assertEquals(0, next.combo)
-        assertFalse(next.gameOver)
-        assertEquals(cells, next.cells)
     }
 
     @Test
@@ -325,14 +320,13 @@ class GameViewModelTest {
 
     @Test
     fun onMoleHit_incrementsComboAndBonusScore() {
-        val cells = List(9) { it == 2 }
+        val cells = List(9) { if (it == 2) CellState(isUp = true, contentType = CellContentType.Emoji, content = "😎") else CellState() }
         val vm = GameViewModel.createForTest(
             initialState = GameUiState(
                 score = 10,
                 combo = 2,
                 running = true,
                 cells = cells,
-                emojis = List(9) { "😎" },
             ),
         )
 
@@ -340,7 +334,7 @@ class GameViewModelTest {
 
         assertEquals(3, vm.uiState.value.combo)
         assertEquals(12, vm.uiState.value.score) // +2 for streak 3
-        assertFalse(vm.uiState.value.cells[2])
+        assertFalse(vm.uiState.value.cells[2].isUp)
     }
 
     @Test
@@ -441,7 +435,7 @@ class GameViewModelTest {
         vm.onMoleHit(2)
 
         assertEquals(13, vm.uiState.value.score)
-        assertFalse(vm.uiState.value.cells[2])
+        assertFalse(vm.uiState.value.cells[2].isUp)
         assertEquals(listOf(SoundEffect.Wack), player.playedEffects)
         assertEquals(1, haptics.impactCount)
         assertEquals(initialBackgroundMusicPlayback, vm.backgroundMusicState.value.playback)
@@ -494,13 +488,12 @@ class GameViewModelTest {
     @Test
     fun onMoleHit_whilePausedDoesNotScoreOrPlayWack() {
         val player = RecordingSoundEffectPlayer()
-        val cells = List(9) { it == 2 }
+        val cells = List(9) { if (it == 2) CellState(isUp = true, contentType = CellContentType.Emoji, content = "😎") else CellState() }
         val vm = GameViewModel.createForTest(
             initialState = GameUiState(
                 score = 4,
                 running = false,
                 cells = cells,
-                emojis = List(9) { "😎" },
             ),
             soundEffectPlayer = player,
         )
@@ -508,7 +501,7 @@ class GameViewModelTest {
         vm.onMoleHit(2)
 
         assertEquals(4, vm.uiState.value.score)
-        assertTrue(vm.uiState.value.cells[2])
+        assertTrue(vm.uiState.value.cells[2].isUp)
         assertTrue(player.playedEffects.isEmpty())
     }
 

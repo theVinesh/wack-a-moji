@@ -26,6 +26,24 @@ enum class GameMode {
     Endless,
 }
 
+enum class PowerUpType {
+    ExtraLife,    // ❤️
+    Slowdown,     // 💊
+    Freeze,       // ❄️
+}
+
+enum class CellContentType {
+    Emoji,
+    PowerUp,
+}
+
+data class CellState(
+    val isUp: Boolean = false,
+    val contentType: CellContentType = CellContentType.Emoji,
+    val content: String = "",
+    val powerUpType: PowerUpType? = null,
+)
+
 internal fun gameOverTitle(mode: GameMode): String = when (mode) {
     GameMode.Classic -> "TIME'S UP!"
     GameMode.Endless -> "OUT OF LIVES!"
@@ -56,26 +74,24 @@ internal fun pointsForHit(currentCombo: Int): Int {
 internal fun applyMoleTimeouts(
     state: GameUiState,
     missedCount: Int,
-    cells: List<Boolean>,
-    emojis: List<String>,
+    cells: List<CellState>,
 ): GameUiState {
     val comboAfterMiss = if (missedCount > 0) 0 else state.combo
     if (state.mode != GameMode.Endless || missedCount <= 0) {
-        return state.copy(cells = cells, emojis = emojis, combo = comboAfterMiss)
+        return state.copy(cells = cells, combo = comboAfterMiss)
     }
 
     val newLives = (state.lives - missedCount).coerceAtLeast(0)
     return if (newLives == 0) {
         state.copy(
-            cells = List(9) { false },
-            emojis = emojis,
+            cells = List(9) { CellState() },
             lives = 0,
             combo = 0,
             gameOver = true,
             running = false,
         )
     } else {
-        state.copy(cells = cells, emojis = emojis, lives = newLives, combo = comboAfterMiss)
+        state.copy(cells = cells, lives = newLives, combo = comboAfterMiss)
     }
 }
 
@@ -108,6 +124,17 @@ internal fun randomMoleEmoji(): String {
     return pool[Random.nextInt(pool.size)]
 }
 
+internal fun powerUpEmoji(type: PowerUpType): String = when (type) {
+    PowerUpType.ExtraLife -> "❤️"
+    PowerUpType.Slowdown -> "💊"
+    PowerUpType.Freeze -> "❄️"
+}
+
+internal fun randomPowerUpType(): PowerUpType {
+    val types = PowerUpType.entries
+    return types[Random.nextInt(types.size)]
+}
+
 internal enum class ScreenshotScenario(val launchValue: String) {
     Gameplay("gameplay"),
     GameOver("game-over"),
@@ -126,8 +153,17 @@ internal fun screenshotStateForScenario(scenario: ScreenshotScenario): GameUiSta
             running = true,
             timeLeft = 9,
             gameOver = false,
-            cells = listOf(false, false, true, false, false, false, false, false, false),
-            emojis = screenshotEmojis,
+            cells = listOf(
+                CellState(isUp = false, contentType = CellContentType.Emoji, content = "😎"),
+                CellState(isUp = false, contentType = CellContentType.Emoji, content = "🤪"),
+                CellState(isUp = true, contentType = CellContentType.Emoji, content = "😂"),
+                CellState(isUp = false, contentType = CellContentType.Emoji, content = "😤"),
+                CellState(isUp = false, contentType = CellContentType.Emoji, content = "🥴"),
+                CellState(isUp = false, contentType = CellContentType.Emoji, content = "😅"),
+                CellState(isUp = false, contentType = CellContentType.Emoji, content = "🙄"),
+                CellState(isUp = false, contentType = CellContentType.Emoji, content = "😡"),
+                CellState(isUp = false, contentType = CellContentType.Emoji, content = "😎"),
+            ),
         )
 
         ScreenshotScenario.GameOver -> GameUiState(
@@ -135,13 +171,12 @@ internal fun screenshotStateForScenario(scenario: ScreenshotScenario): GameUiSta
             running = false,
             timeLeft = 0,
             gameOver = true,
-            cells = List(9) { false },
-            emojis = screenshotEmojis,
+            cells = List(9) { CellState() },
         )
 
         ScreenshotScenario.Settings -> GameUiState(
             running = false,
-            emojis = screenshotEmojis,
+            cells = List(9) { CellState() },
         )
     }
 
@@ -177,8 +212,9 @@ data class GameUiState(
     val mode: GameMode = GameMode.Classic,
     val lives: Int = ENDLESS_START_LIVES,
     val combo: Int = 0,
-    val cells: List<Boolean> = List(9) { false },
-    val emojis: List<String> = List(9) { randomMoleEmoji() },
+    val cells: List<CellState> = List(9) { CellState() },
+    val powerUpSlowdownEndTime: Long? = null,
+    val powerUpFreezeEndTime: Long? = null,
 ) {
     val level: Int get() = calculateLevel(score)
     val timerFraction: Float get() = timeLeft.toFloat() / GAME_DURATION_SECONDS.toFloat()
@@ -220,20 +256,50 @@ class GameViewModel internal constructor(
     fun onMoleHit(index: Int) {
         var scoredHit = false
         _uiState.update { state ->
-            if (!state.cells[index] || state.gameOver || !state.running) return@update state
-            scoredHit = true
-            val nextCombo = state.combo + 1
-            state.copy(
-                score = state.score + pointsForHit(state.combo),
-                combo = nextCombo,
-                cells = state.cells.toMutableList().also { it[index] = false },
-            )
+            val cell = state.cells[index]
+            if (!cell.isUp || state.gameOver || !state.running) return@update state
+
+            when (cell.contentType) {
+                CellContentType.Emoji -> {
+                    scoredHit = true
+                    val nextCombo = state.combo + 1
+                    state.copy(
+                        score = state.score + pointsForHit(state.combo),
+                        combo = nextCombo,
+                        cells = state.cells.toMutableList().also { it[index] = CellState() },
+                    )
+                }
+                CellContentType.PowerUp -> {
+                    val updatedState = applyPowerUp(state, cell.powerUpType!!)
+                    updatedState.copy(
+                        cells = updatedState.cells.toMutableList().also { it[index] = CellState() }
+                    )
+                }
+            }
         }
         if (scoredHit) {
             soundEffectPlayer.play(SoundEffect.Wack)
             if (hapticsEnabled()) {
                 hapticFeedback.performLightImpact()
             }
+        }
+    }
+
+    private fun applyPowerUp(state: GameUiState, type: PowerUpType): GameUiState = when (type) {
+        PowerUpType.ExtraLife -> {
+            if (state.mode == GameMode.Endless) {
+                state.copy(lives = state.lives + 1)
+            } else {
+                state
+            }
+        }
+        PowerUpType.Slowdown -> {
+            val endTime = System.currentTimeMillis() + 10_000
+            state.copy(powerUpSlowdownEndTime = endTime)
+        }
+        PowerUpType.Freeze -> {
+            val endTime = System.currentTimeMillis() + 10_000
+            state.copy(powerUpFreezeEndTime = endTime)
         }
     }
 
@@ -322,7 +388,7 @@ class GameViewModel internal constructor(
                         timeLeft = 0,
                         gameOver = true,
                         running = false,
-                        cells = List(9) { false },
+                        cells = List(9) { CellState() },
                     )
                 } else {
                     s.copy(timeLeft = newTime)
@@ -340,49 +406,91 @@ class GameViewModel internal constructor(
 
             val currentLevel = state.level
             val maxMoles = maxMolesForLevel(currentLevel)
+            
+            // Apply slowdown effect if active
+            val now = System.currentTimeMillis()
+            val isSlowdownActive = state.powerUpSlowdownEndTime?.let { it > now } ?: false
+            val isFreezeActive = state.powerUpFreezeEndTime?.let { it > now } ?: false
+            
             val (minTime, maxTime) = moleUpTimeRange(currentLevel)
+            val adjustedMinTime = if (isSlowdownActive) minTime * 2 else minTime
+            val adjustedMaxTime = if (isSlowdownActive) maxTime * 2 else maxTime
 
-            var newCells: MutableList<Boolean>? = null
+            var newCells: MutableList<CellState>? = null
             var missedCount = 0
 
-            // Tick down mole visibility timers
+            // Tick down mole visibility timers (skip if freeze is active for emoji cells)
             for (i in 0 until 9) {
-                if (state.cells[i]) {
-                    remaining[i] = (remaining[i] - DELAY_BETWEEN_MOLES_MS).coerceAtLeast(0L)
-                    if (remaining[i] == 0L) {
-                        if (newCells == null) newCells = state.cells.toMutableList()
-                        newCells[i] = false
-                        missedCount++
+                val cell = state.cells[i]
+                if (cell.isUp) {
+                    // Power-ups always tick down, emojis freeze when freeze is active
+                    val shouldTick = cell.contentType == CellContentType.PowerUp || !isFreezeActive
+                    
+                    if (shouldTick) {
+                        remaining[i] = (remaining[i] - DELAY_BETWEEN_MOLES_MS).coerceAtLeast(0L)
+                        if (remaining[i] == 0L) {
+                            if (newCells == null) newCells = state.cells.toMutableList()
+                            newCells[i] = CellState()
+                            // Only count as missed if it's an emoji (not a power-up)
+                            if (cell.contentType == CellContentType.Emoji) {
+                                missedCount++
+                            }
+                        }
                     }
                 }
             }
 
-            // Maybe spawn a new mole
+            // Maybe spawn a new mole or power-up
             val cellsToCount = newCells ?: state.cells
-            val upCount = cellsToCount.count { it }
-            var newEmojis: MutableList<String>? = null
+            val upCount = cellsToCount.count { it.isUp }
             if (upCount < maxMoles) {
                 val idx = Random.nextInt(0, 9)
-                if (!cellsToCount[idx]) {
+                if (!cellsToCount[idx].isUp) {
                     if (newCells == null) newCells = state.cells.toMutableList()
-                    newCells[idx] = true
-                    newEmojis = state.emojis.toMutableList()
-                    newEmojis[idx] = randomMoleEmoji()
-                    remaining[idx] = Random.nextLong(minTime, maxTime)
+                    
+                    // In endless mode, 5% chance to spawn a power-up instead of emoji
+                    val shouldSpawnPowerUp = state.mode == GameMode.Endless && Random.nextFloat() < 0.05f
+                    
+                    if (shouldSpawnPowerUp) {
+                        val powerUpType = randomPowerUpType()
+                        newCells[idx] = CellState(
+                            isUp = true,
+                            contentType = CellContentType.PowerUp,
+                            content = powerUpEmoji(powerUpType),
+                            powerUpType = powerUpType,
+                        )
+                    } else {
+                        val emoji = if (isFreezeActive) "🥶" else randomMoleEmoji()
+                        newCells[idx] = CellState(
+                            isUp = true,
+                            contentType = CellContentType.Emoji,
+                            content = emoji,
+                        )
+                    }
+                    remaining[idx] = Random.nextLong(adjustedMinTime, adjustedMaxTime)
+                }
+            }
+            
+            // Apply freeze effect to already-visible emojis
+            if (isFreezeActive && newCells == null) {
+                for (i in 0 until 9) {
+                    val cell = state.cells[i]
+                    if (cell.isUp && cell.contentType == CellContentType.Emoji && cell.content != "🥶") {
+                        if (newCells == null) newCells = state.cells.toMutableList()
+                        newCells[i] = cell.copy(content = "🥶")
+                    }
                 }
             }
 
             // Skip state updates when nothing changed this tick (no timeout, no spawn).
-            if (newCells != null || newEmojis != null || missedCount > 0) {
+            if (newCells != null || missedCount > 0) {
                 val finalCells = newCells ?: state.cells
-                val finalEmojis = newEmojis ?: state.emojis
                 _uiState.update { s ->
                     if (!s.running || s.gameOver) return@update s
                     applyMoleTimeouts(
                         state = s,
                         missedCount = missedCount,
                         cells = finalCells,
-                        emojis = finalEmojis,
                     )
                 }
             }

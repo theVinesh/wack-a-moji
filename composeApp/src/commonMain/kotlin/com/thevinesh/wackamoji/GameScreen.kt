@@ -66,7 +66,6 @@ fun GameScreen(
             // Game grid
             GameGrid(
                 cells = state.cells,
-                emojis = state.emojis,
                 onHit = { index -> viewModel.onMoleHit(index) },
                 modifier = Modifier.padding(horizontal = 4.dp)
             )

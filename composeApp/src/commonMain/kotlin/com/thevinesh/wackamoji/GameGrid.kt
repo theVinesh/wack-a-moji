@@ -25,8 +25,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun GameGrid(
-    cells: List<Boolean>,
-    emojis: List<String>,
+    cells: List<CellState>,
     onHit: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -70,9 +69,10 @@ fun GameGrid(
                 ) {
                     for (col in 0 until 3) {
                         val index = row * 3 + col
+                        val cell = cells[index]
                         MoleHole(
-                            isUp = cells[index],
-                            emoji = emojis[index],
+                            isUp = cell.isUp,
+                            emoji = cell.content,
                             onTap = { onHit(index) },
                             modifier = Modifier.weight(1f).padding(holePadding)
                         )
@@ -88,11 +88,16 @@ fun GameGrid(
 private fun GameGridPreview() {
     MaterialTheme {
         val cells = remember {
-            mutableStateListOf<Boolean>().also {
-                it.addAll(List(9) { it % 2 == 0 })
+            mutableStateListOf<CellState>().also {
+                it.addAll(List(9) { i -> 
+                    CellState(
+                        isUp = i % 2 == 0,
+                        contentType = CellContentType.Emoji,
+                        content = listOf("🐹", "🐰", "🐵")[i % 3]
+                    )
+                })
             }
         }
-        val emojis = remember { List(9) { listOf("🐹", "🐰", "🐵")[it % 3] } }
-        GameGrid(cells = cells, emojis = emojis, onHit = {})
+        GameGrid(cells = cells, onHit = {})
     }
 }
