@@ -72,22 +72,18 @@ private fun PowerUpPickupAnimation(
             animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing)
         )
         
-        // Arc to target position with simultaneous scale down and fade
-        launch {
-            position.animateTo(
-                targetValue = pickup.endOffset,
-                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
-            )
-        }
+        // Arc to target position and scale down simultaneously
+        position.animateTo(
+            targetValue = pickup.endOffset,
+            animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
+        )
         
-        launch {
-            scale.animateTo(
-                targetValue = 0.8f,
-                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
-            )
-        }
+        scale.animateTo(
+            targetValue = 0.8f,
+            animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
+        )
         
-        kotlinx.coroutines.delay(400)
+        // Fade out
         alpha.animateTo(
             targetValue = 0f,
             animationSpec = tween(durationMillis = 200)
