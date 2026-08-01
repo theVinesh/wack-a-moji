@@ -215,9 +215,20 @@ data class GameUiState(
     val cells: List<CellState> = List(9) { CellState() },
     val powerUpSlowdownTicksRemaining: Int = 0,
     val powerUpFreezeTicksRemaining: Int = 0,
+    val lastPickedUpPowerUp: Pair<PowerUpType, Int>? = null, // (type, cellIndex)
 ) {
     val level: Int get() = calculateLevel(score)
     val timerFraction: Float get() = timeLeft.toFloat() / GAME_DURATION_SECONDS.toFloat()
+    
+    val activePowerUps: List<ActivePowerUp>
+        get() = buildList {
+            if (powerUpSlowdownTicksRemaining > 0) {
+                add(ActivePowerUp(PowerUpType.Slowdown, powerUpSlowdownTicksRemaining))
+            }
+            if (powerUpFreezeTicksRemaining > 0) {
+                add(ActivePowerUp(PowerUpType.Freeze, powerUpFreezeTicksRemaining))
+            }
+        }
 }
 
 internal const val TICKS_PER_SECOND = 1000 / DELAY_BETWEEN_MOLES_MS.toInt()
@@ -275,7 +286,8 @@ class GameViewModel internal constructor(
                 CellContentType.PowerUp -> {
                     val updatedState = applyPowerUp(state, cell.powerUpType!!)
                     updatedState.copy(
-                        cells = updatedState.cells.toMutableList().also { it[index] = CellState() }
+                        cells = updatedState.cells.toMutableList().also { it[index] = CellState() },
+                        lastPickedUpPowerUp = cell.powerUpType to index
                     )
                 }
             }
@@ -329,6 +341,10 @@ class GameViewModel internal constructor(
         } else {
             stopGameLoops()
         }
+    }
+    
+    fun clearLastPickupTrigger() {
+        _uiState.update { it.copy(lastPickedUpPowerUp = null) }
     }
 
     fun onAppForegrounded() {
