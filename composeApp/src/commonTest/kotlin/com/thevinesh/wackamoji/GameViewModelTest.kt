@@ -142,7 +142,7 @@ class GameViewModelTest {
         assertEquals(GAME_DURATION_SECONDS, state.timeLeft)
         assertFalse(state.gameOver)
         assertEquals(9, state.cells.size)
-        assertTrue(state.cells.all { !it })
+        assertTrue(state.cells.all { !it.isUp })
         assertEquals(1, state.level)
         assertEquals(1.0f, state.timerFraction)
     }
@@ -182,7 +182,7 @@ class GameViewModelTest {
         assertTrue(state.running)
         assertFalse(state.gameOver)
         assertEquals(2, state.level)
-        assertEquals(1, state.cells.count { it })
+        assertEquals(1, state.cells.count { it.isUp })
     }
 
     @Test
@@ -194,7 +194,7 @@ class GameViewModelTest {
         assertFalse(state.running)
         assertTrue(state.gameOver)
         assertEquals(4, state.level)
-        assertTrue(state.cells.all { !it })
+        assertTrue(state.cells.all { !it.isUp })
     }
 
     @Test
@@ -205,7 +205,7 @@ class GameViewModelTest {
         assertEquals(GAME_DURATION_SECONDS, state.timeLeft)
         assertFalse(state.running)
         assertFalse(state.gameOver)
-        assertTrue(state.cells.all { !it })
+        assertTrue(state.cells.all { !it.isUp })
     }
 
     // ─── GameViewModel initial state ─────────────────────────────────────────
