@@ -436,6 +436,7 @@ class GameViewModelTest {
 
         assertEquals(13, vm.uiState.value.score)
         assertFalse(vm.uiState.value.cells[2].isUp)
+        assertEquals(2, vm.uiState.value.lastHitCellIndex)
         assertEquals(listOf(SoundEffect.Wack), player.playedEffects)
         assertEquals(1, haptics.impactCount)
         assertEquals(initialBackgroundMusicPlayback, vm.backgroundMusicState.value.playback)

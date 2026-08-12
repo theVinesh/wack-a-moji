@@ -20,10 +20,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-internal fun ScoreDisplay(score: Int) {
+internal fun ScoreDisplay(
+    score: Int,
+    modifier: Modifier = Modifier,
+) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.padding(top = 8.dp)
+        modifier = modifier.padding(top = 8.dp)
     ) {
         // Large score number
         Text(

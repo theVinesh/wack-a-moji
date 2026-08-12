@@ -3,9 +3,9 @@ package com.thevinesh.wackamoji
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
@@ -28,6 +28,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -41,32 +42,31 @@ fun GameScreen(
     val state by viewModel.uiState.collectAsState()
     val density = LocalDensity.current
     val pickupManager = remember { PowerUpPickupManager() }
+    val comboFloatManager = remember { ComboFloatManager() }
     
     var dockPosition by remember { mutableStateOf(Offset.Zero) }
     
     // Trigger pickup animation when a power-up is collected
     LaunchedEffect(state.lastPickedUpPowerUp) {
         state.lastPickedUpPowerUp?.let { (type, cellIndex) ->
-            // Calculate start position from cell index (rough estimate)
-            // In production, you'd get actual cell positions via onGloballyPositioned
-            val gridStartX = with(density) { 100.dp.toPx() }
-            val gridStartY = with(density) { 300.dp.toPx() }
-            val cellSize = with(density) { 80.dp.toPx() }
-            val row = cellIndex / 3
-            val col = cellIndex % 3
-            
-            val startOffset = Offset(
-                gridStartX + col * cellSize + cellSize / 2,
-                gridStartY + row * cellSize + cellSize / 2
-            )
-            
             pickupManager.triggerPickup(
                 emoji = powerUpEmoji(type),
-                startOffset = startOffset,
+                startOffset = estimateCellCenter(cellIndex, density),
                 endOffset = dockPosition
             )
             
             viewModel.clearLastPickupTrigger()
+        }
+    }
+
+    // Trigger a floating combo pill on every scored hit once a streak is live
+    LaunchedEffect(state.combo) {
+        val combo = state.combo
+        if (combo >= 2) {
+            val hitIndex = state.lastHitCellIndex ?: return@LaunchedEffect
+            val start = estimateCellCenter(hitIndex, density)
+            val end = Offset(start.x, start.y - with(density) { 90.dp.toPx() })
+            comboFloatManager.triggerCombo(combo = combo, startOffset = start, endOffset = end)
         }
     }
 
@@ -81,28 +81,24 @@ fun GameScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Top row: Score + Power-up dock
-            Row(
-                modifier = Modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ScoreDisplay(score = state.score)
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
-                // Power-up dock on the right
+            // Top row: centered Score + power-up dock on the right
+            Box(modifier = Modifier.fillMaxWidth()) {
+                ScoreDisplay(
+                    score = state.score,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+
                 if (state.mode == GameMode.Endless) {
                     PowerUpDock(
                         activePowerUps = state.activePowerUps,
-                        modifier = Modifier.onGloballyPositioned { coords ->
-                            dockPosition = coords.positionInRoot()
-                        }
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .onGloballyPositioned { coords ->
+                                dockPosition = coords.positionInRoot()
+                            }
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            ComboDisplay(combo = state.combo)
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -144,6 +140,13 @@ fun GameScreen(
             modifier = Modifier.fillMaxSize()
         )
 
+        // Floating combo pill animations overlay
+        ComboFloatAnimations(
+            floats = comboFloatManager.floats,
+            onFinished = comboFloatManager::removeFloat,
+            modifier = Modifier.fillMaxSize()
+        )
+
         if (!state.running && !state.gameOver) {
             PausedBanner(
                 modifier = Modifier
@@ -152,6 +155,19 @@ fun GameScreen(
             )
         }
     }
+}
+
+/** Approximate the center of a grid cell in root coordinates (shared by power-up and combo spawn animations). */
+private fun estimateCellCenter(index: Int, density: Density): Offset {
+    val gridStartX = with(density) { 100.dp.toPx() }
+    val gridStartY = with(density) { 300.dp.toPx() }
+    val cellSize = with(density) { 80.dp.toPx() }
+    val row = index / 3
+    val col = index % 3
+    return Offset(
+        gridStartX + col * cellSize + cellSize / 2,
+        gridStartY + row * cellSize + cellSize / 2
+    )
 }
 
 @Composable

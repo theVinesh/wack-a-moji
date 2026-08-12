@@ -233,6 +233,7 @@ private fun GameplayAppScreen(
                     level = state.level,
                     mode = state.mode,
                     onRestart = { gameViewModel.onRestart() },
+                    onMenu = onBack,
                 )
             }
         }

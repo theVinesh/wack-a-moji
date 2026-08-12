@@ -48,13 +48,10 @@ class ComposeAppCommonTest {
     }
 
     @Test
-    fun formatComboLabel_andActivity() {
+    fun formatComboLabel_showsPillText() {
         assertEquals("NO COMBO", formatComboLabel(0))
         assertEquals("x1 COMBO", formatComboLabel(1))
         assertEquals("x4 COMBO", formatComboLabel(4))
-        assertEquals(false, isComboActive(0))
-        assertEquals(false, isComboActive(1))
-        assertEquals(true, isComboActive(2))
     }
 
     @Test

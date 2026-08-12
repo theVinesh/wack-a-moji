@@ -29,6 +29,7 @@ internal fun GameOverOverlay(
     level: Int,
     mode: GameMode = GameMode.Classic,
     onRestart: () -> Unit,
+    onMenu: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -87,6 +88,13 @@ internal fun GameOverOverlay(
                 onClick = onRestart,
                 modifier = Modifier.width(200.dp)
             )
+            GameButton(
+                text = "MAIN MENU",
+                backgroundColor = WackAMojiColors.MainMenuBlue,
+                shadowColor = WackAMojiColors.MainMenuShadow,
+                onClick = onMenu,
+                modifier = Modifier.width(200.dp)
+            )
         }
     }
 }
@@ -94,5 +102,5 @@ internal fun GameOverOverlay(
 @org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 private fun GameOverOverlayPreview() {
-    MaterialTheme { GameOverOverlay(score = 25, level = 3, onRestart = {}) }
+    MaterialTheme { GameOverOverlay(score = 25, level = 3, onRestart = {}, onMenu = {}) }
 }

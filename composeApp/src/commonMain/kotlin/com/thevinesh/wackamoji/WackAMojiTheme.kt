@@ -28,6 +28,8 @@ object WackAMojiColors {
     // Buttons
     val RestartOrange = Color(0xFFFB8500)
     val RestartShadow = Color(0xFFD35400)
+    val MainMenuBlue = Color(0xFF0EA5E9)     // sky-500
+    val MainMenuShadow = Color(0xFF0369A1)   // sky-700
     val LeaderboardPurple = Color(0xFF7C3AED)
     val LeaderboardShadow = Color(0xFF5B21B6)
     val PauseGreen = Color(0xFF8BC34A)
