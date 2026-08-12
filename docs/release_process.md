@@ -9,7 +9,8 @@ This is the canonical repo guide for shipping WackAMoji on both Android and iOS.
   - iOS: build an IPA and upload it to **TestFlight**.
 - Store metadata, listing images, and screenshots do **not** ship on the normal push path.
 - Listing sync is a separate **manual GitHub Actions workflow**: `Sync Store Metadata`.
-- Final submission/review/promotion steps in Play Console and App Store Connect remain manual.
+- Final store submission is a separate **manual GitHub Actions workflow**: `Submit for Review` (`.github/workflows/submit-for-review.yml`), which uploads the Android AAB to the Play production track and submits the newest VALID TestFlight build to the App Store.
+- If Play Console has a release stuck in review, it must be discarded **manually in the console** (no API); see the Submit for Review section below.
 
 ## Source of truth: what to edit
 
@@ -91,23 +92,25 @@ That matrix captures `gameplay` and `game-over`, which produces the current mini
 
 ## Versioning
 
+One shared source of truth so both stores show the same version:
+
+- `version.txt` at the repo root holds the user-visible release version (e.g. `1.0.82`). Bump it per release.
+- Android reads it for `versionName`; iOS passes it at build time as `MARKETING_VERSION`.
+
 ### Android
 
-- `composeApp/build.gradle.kts` derives release versioning from `GITHUB_RUN_NUMBER`.
-- `versionCode = GITHUB_RUN_NUMBER`
-- `versionName = 1.0.$GITHUB_RUN_NUMBER`
+- `composeApp/build.gradle.kts` reads `version.txt` for `versionName`.
+- `versionCode` is **minutes since epoch** (`androidVersionCode`), globally monotonic across every workflow. Do NOT use `GITHUB_RUN_NUMBER` for versionCode: it is per-workflow, so two pipelines collide (a submit workflow starting at run 1 produced versionCode 1 and Play rejected it for not being an upgrade).
 
 ### iOS
 
-- `ios build_release_artifact` sets the build number from `GITHUB_RUN_NUMBER`.
+- `ios build_release_artifact` passes `APP_BUILD_NUMBER=GITHUB_RUN_NUMBER` (unique CFBundleVersion per CI run) plus `MARKETING_VERSION=<version.txt>` via xcargs, overriding the `1.0.$(APP_BUILD_NUMBER)` fallback in `iosApp/Configuration/Config.xcconfig` (used for local builds).
 - App Store / TestFlight release builds must be produced with Xcode 26 or later so the resulting IPA is built against the iOS 26 SDK or later.
-- `iosApp/Configuration/Config.xcconfig` defines:
-  - `CURRENT_PROJECT_VERSION=1` as the base build-number setting
-  - `MARKETING_VERSION=1.0.$(CURRENT_PROJECT_VERSION)`
-- Listing sync does not rewrite an existing Prepare for Submission version string (`skip_app_version_update: true`).
-- If App Store Connect has no editable iOS version, `ios sync_listing` creates one by bumping the live/latest version (or `IOS_APP_STORE_VERSION` when set), then uploads listing metadata to it.
+- App Store Connect keys builds by (version, build number). The editable App Store version string MUST equal a build's `CFBundleShortVersionString` or deliver fails with `Build number: N does not exist`.
+- Versions cannot be deleted via API once any build is uploaded (`STATE_ERROR` "A version cannot be deleted if any build has been uploaded for the platform"). Retarget the existing editable version in place instead: `app.ensure_version!(target)` PATCHes `versionString` on it.
+- `sync_listing` still creates an editable version by bumping the live/latest version when none exists (`skip_app_version_update: true`, or `IOS_APP_STORE_VERSION` to pin).
 
-Practical implication: routine release version bumps should come from CI/build-number flow, not from manually rewriting store-listing text.
+Practical implication: bump `version.txt` on `main`, let `Build and Test` produce matching binaries, then run `Submit for Review`.
 
 ## Signing and secrets
 
@@ -176,6 +179,21 @@ Platform behavior:
 
 If you only changed listing content, you can run this manual workflow on the commit with those changes without doing a new binary release first.
 
+### Submit for review (both stores)
+
+Workflow: `.github/workflows/submit-for-review.yml` (input `stores`: both/android/ios).
+
+Android:
+- Validates signing inputs, decodes the keystore, builds a fresh release AAB on the workflow's own run (versionName from `version.txt`, monotonic versionCode).
+- Syncs the production listing, then uploads the AAB to the `production` track with `release_status=completed` and submits for review.
+
+iOS:
+- Uses Spaceship to pick the newest TestFlight build whose `processingState == "VALID"` (never `latest_testflight_build_number` from the uncommon `pilot` helper — it can return a build still processing).
+- Fails fast if that build's `app_version` != `version.txt` (means `Build and Test` hasn't run since the bump).
+- Retargets the editable App Store version to `version.txt` in place via `app.ensure_version!` (PATCH), then runs `deliver` with `skip_binary_upload: true`, `submission_information` pre-answered as no custom encryption, and `submit_for_review: true`.
+
+Known Play caveat: only one in-review release is allowed per track. If a previous production upload is still in review, the new upload errors — discard the stuck release manually in Play Console (Release overview -> production -> Discard release; remove pending Publishing overview changes first if prompted). There is no API to discard an in-review release.
+
 ## Recommended order of operations
 
 ### One-time setup
@@ -190,19 +208,18 @@ If you only changed listing content, you can run this manual workflow on the com
 2. Update repo-managed listing content in `store_metadata/`, keeping store text emoji-free and plain-text-safe for both Play and App Store sync.
 3. Generate Android/iOS screenshots with `./capture_screenshots.sh`.
 4. Curate the final App Store screenshots into `store_metadata/assets/screenshots/ios/en-US/`.
-5. Merge or push the release changes to `main`.
-6. Let `Build and Test` finish:
+5. Bump `version.txt` (e.g. `1.0.83`).
+6. Merge or push the release changes to `main`.
+7. Let `Build and Test` finish:
    - Android AAB uploaded to Play internal draft
-   - iOS IPA uploaded to TestFlight
-7. Verify the uploaded binaries in Play Console / TestFlight.
-8. Run `Sync Store Metadata` on the ref containing the listing changes after a final quick pass for unsupported characters in store text.
-9. Perform store-console-only steps manually:
-   - review listing changes
-   - promote Android beyond internal/draft when ready
-   - submit the iOS release when ready
+   - iOS IPA uploaded to TestFlight (built with `MARKETING_VERSION` from `version.txt`)
+8. Verify the uploaded binaries in Play Console / TestFlight. If Play production already has a release in review, discard it in the console first.
+9. Run `Sync Store Metadata` on the ref containing the listing changes after a final quick pass for unsupported characters in store text.
+10. Run `Submit for Review` with `stores=both` — Android AAB goes to production for review, newest VALID TestFlight build (must match `version.txt`) goes to the App Store for review.
 
 ### Practical rule of thumb
 
-- Use push-to-`main` for **binaries**.
+- Use push-to-`main` for **binaries** (internal/TestFlight).
 - Use `Sync Store Metadata` for **listing content**.
-- Do final review/promotion/submission in the store consoles.
+- Use `Submit for Review` for **store submission**.
+- The store consoles handle what the API can't: review status, stuck-release discards, and any console-only prerequisites (data safety, ads, etc.).
