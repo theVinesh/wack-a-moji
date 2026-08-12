@@ -3,7 +3,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.gradle.api.tasks.Copy
 
-private val githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+private val appVersionName = run {
+    val versionFile = rootProject.file("version.txt")
+    if (versionFile.exists()) versionFile.readText().trim() else "1.0.1"
+}
 // Monotonic versionCode shared across every workflow (GITHUB_RUN_NUMBER is per-workflow,
 // so two pipelines would collide). Minutes since epoch: always increasing, fits Int for decades.
 private val androidVersionCode = (System.currentTimeMillis() / 60_000L).toInt()
@@ -110,7 +113,7 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
 
         versionCode = androidVersionCode
-        versionName = "1.0.$githubRunNumber"
+        versionName = appVersionName
     }
 
     signingConfigs {

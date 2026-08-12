@@ -38,6 +38,29 @@ def ios_build_number
   ENV["GITHUB_RUN_NUMBER"].to_s.strip.empty? ? "1" : ENV["GITHUB_RUN_NUMBER"].strip
 end
 
+# Single source of truth for the user-visible release version. version.txt
+# at the repo root drives BOTH platforms so App Store and Play show the same
+# version for the same release.
+def repo_version_string
+  version_path = File.expand_path("../../version.txt", __dir__)
+  version = File.exist?(version_path) ? File.read(version_path).strip : ""
+  UI.user_error!("version.txt missing at #{version_path}; add it before building or submitting") if version.to_s.empty?
+  version
+end
+
+# AppStoreVersion has no delete! helper in this fastlane; issue the DELETE
+# straight against the Connect API using the JWT the client already holds.
+def delete_app_store_version!(edit_version)
+  require "net/http"
+  token = Spaceship::ConnectAPI.client.token.text
+  endpoint = URI("https://api.appstoreconnect.apple.com/v1/appStoreVersions/#{edit_version.id}")
+  req = Net::HTTP::Delete.new(endpoint)
+  req["Authorization"] = "Bearer #{token}"
+  res = Net::HTTP.start(endpoint.hostname, endpoint.port, use_ssl: true) { |http| http.request(req) }
+  UI.message("DELETE /v1/appStoreVersions/#{edit_version.id} -> HTTP #{res.code}")
+  UI.user_error!("Failed to delete app store version #{edit_version.version_string}: HTTP #{res.code} #{res.body}") unless res.code.to_i == 204
+end
+
 def app_store_api_key
   app_store_connect_api_key(
     key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
@@ -170,7 +193,7 @@ platform :ios do
       scheme: "iosApp",
       clean: true,
       export_method: "app-store",
-      xcargs: "APP_BUILD_NUMBER=#{build_number}",
+      xcargs: "APP_BUILD_NUMBER=#{build_number} MARKETING_VERSION=#{repo_version_string}",
       output_directory: "build/ci-release",
       output_name: "Wack-A-Moji.ipa"
     )
@@ -258,8 +281,10 @@ platform :ios do
       UI.user_error!("No VALID build ready for App Store submission (seen states: #{states})")
     end
     build_number = ready_build.version.to_s
-    target_version = ready_build.app_version
-    UI.user_error!("VALID build ##{build_number} has no app version string") if target_version.to_s.empty?
+    target_version = repo_version_string
+    if ready_build.app_version != target_version
+      UI.user_error!("Newest VALID build ##{build_number} reports version #{ready_build.app_version} but version.txt says #{target_version}. Re-run build-and-test to produce a matching build.")
+    end
     UI.message("Submitting build ##{build_number} (version #{target_version}) for App Store review")
 
     # App Store Connect keys builds by (version, build_number). The editable
@@ -269,7 +294,7 @@ platform :ios do
     edit_version = app.get_edit_app_store_version(platform: platform)
     if edit_version && edit_version.version_string != target_version
       UI.message("Deleting stale editable App Store version #{edit_version.version_string}; recreating as #{target_version}")
-      Spaceship::ConnectAPI.client.delete("v1/appStoreVersions/#{edit_version.id}")
+      delete_app_store_version!(edit_version)
       edit_version = nil
     end
     unless edit_version
