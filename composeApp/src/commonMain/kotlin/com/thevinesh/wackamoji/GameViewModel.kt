@@ -217,6 +217,8 @@ data class GameUiState(
     val powerUpFreezeTicksRemaining: Int = 0,
     val lastPickedUpPowerUp: Pair<PowerUpType, Int>? = null, // (type, cellIndex)
     val lastHitCellIndex: Int? = null, // cell of the most recent scored mole hit
+    val lastScoreDelta: Int? = null, // points gained on the most recent scored hit
+    val scoredHitCount: Int = 0, // total scored mole hits (unique trigger per hit)
 ) {
     val level: Int get() = calculateLevel(score)
     val timerFraction: Float get() = timeLeft.toFloat() / GAME_DURATION_SECONDS.toFloat()
@@ -278,10 +280,13 @@ class GameViewModel internal constructor(
                 CellContentType.Emoji -> {
                     scoredHit = true
                     val nextCombo = state.combo + 1
+                    val gained = pointsForHit(state.combo)
                     state.copy(
-                        score = state.score + pointsForHit(state.combo),
+                        score = state.score + gained,
                         combo = nextCombo,
                         lastHitCellIndex = index,
+                        lastScoreDelta = gained,
+                        scoredHitCount = state.scoredHitCount + 1,
                         cells = state.cells.toMutableList().also { it[index] = CellState() },
                     )
                 }

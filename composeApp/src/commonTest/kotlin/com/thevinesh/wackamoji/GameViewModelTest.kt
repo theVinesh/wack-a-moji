@@ -431,12 +431,16 @@ class GameViewModelTest {
             hapticFeedback = haptics,
         )
         val initialBackgroundMusicPlayback = vm.backgroundMusicState.value.playback
+        val scoreBefore = vm.uiState.value.score
 
         vm.onMoleHit(2)
 
-        assertEquals(13, vm.uiState.value.score)
+        val scoreAfter = vm.uiState.value.score
+        assertEquals(13, scoreAfter)
         assertFalse(vm.uiState.value.cells[2].isUp)
         assertEquals(2, vm.uiState.value.lastHitCellIndex)
+        assertEquals(scoreAfter - scoreBefore, vm.uiState.value.lastScoreDelta)
+        assertEquals(1, vm.uiState.value.scoredHitCount)
         assertEquals(listOf(SoundEffect.Wack), player.playedEffects)
         assertEquals(1, haptics.impactCount)
         assertEquals(initialBackgroundMusicPlayback, vm.backgroundMusicState.value.playback)

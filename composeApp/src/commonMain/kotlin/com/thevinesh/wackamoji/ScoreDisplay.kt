@@ -1,5 +1,8 @@
 package com.thevinesh.wackamoji
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.background
@@ -10,9 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,9 +30,26 @@ internal fun ScoreDisplay(
     score: Int,
     modifier: Modifier = Modifier,
 ) {
+    // Gentle pop whenever the score goes up
+    val scale = remember { Animatable(1f) }
+    LaunchedEffect(score) {
+        if (score > 0) {
+            scale.animateTo(
+                targetValue = 1.12f,
+                animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing)
+            )
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 160, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.padding(top = 8.dp)
+        modifier = modifier
+            .padding(top = 8.dp)
+            .scale(scale.value)
     ) {
         // Large score number
         Text(

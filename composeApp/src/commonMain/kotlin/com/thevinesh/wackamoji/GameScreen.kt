@@ -42,9 +42,10 @@ fun GameScreen(
     val state by viewModel.uiState.collectAsState()
     val density = LocalDensity.current
     val pickupManager = remember { PowerUpPickupManager() }
-    val comboFloatManager = remember { ComboFloatManager() }
+    val labelManager = remember { FloatingLabelManager() }
     
     var dockPosition by remember { mutableStateOf(Offset.Zero) }
+    var scoreAnchor by remember { mutableStateOf(Offset.Zero) }
     
     // Trigger pickup animation when a power-up is collected
     LaunchedEffect(state.lastPickedUpPowerUp) {
@@ -59,15 +60,23 @@ fun GameScreen(
         }
     }
 
-    // Trigger a floating combo pill on every scored hit once a streak is live
+    // Floating combo pill only on milestone streaks (2x, 3x, capped at 5x)
     LaunchedEffect(state.combo) {
         val combo = state.combo
-        if (combo >= 2) {
+        if (combo in COMBO_FLOAT_MILESTONES) {
             val hitIndex = state.lastHitCellIndex ?: return@LaunchedEffect
             val start = estimateCellCenter(hitIndex, density)
-            val end = Offset(start.x, start.y - with(density) { 90.dp.toPx() })
-            comboFloatManager.triggerCombo(combo = combo, startOffset = start, endOffset = end)
+            val end = Offset(start.x, start.y - with(density) { 56.dp.toPx() })
+            labelManager.trigger(text = formatComboLabel(combo), startOffset = start, endOffset = end)
         }
+    }
+
+    // Floating "+N" beside the score on every scored hit
+    LaunchedEffect(state.scoredHitCount) {
+        if (scoreAnchor == Offset.Zero) return@LaunchedEffect
+        val delta = state.lastScoreDelta ?: return@LaunchedEffect
+        val end = Offset(scoreAnchor.x, scoreAnchor.y - with(density) { 48.dp.toPx() })
+        labelManager.trigger(text = "+$delta", startOffset = scoreAnchor, endOffset = end)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -85,7 +94,12 @@ fun GameScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 ScoreDisplay(
                     score = state.score,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .onGloballyPositioned { coords ->
+                            val pos = coords.positionInRoot()
+                            scoreAnchor = Offset(pos.x + coords.size.width, pos.y + coords.size.height / 2)
+                        }
                 )
 
                 if (state.mode == GameMode.Endless) {
@@ -140,10 +154,10 @@ fun GameScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Floating combo pill animations overlay
-        ComboFloatAnimations(
-            floats = comboFloatManager.floats,
-            onFinished = comboFloatManager::removeFloat,
+        // Floating labels overlay (combo milestones + score deltas)
+        FloatingLabelAnimations(
+            labels = labelManager.labels,
+            onFinished = labelManager::removeLabel,
             modifier = Modifier.fillMaxSize()
         )
 
@@ -156,6 +170,9 @@ fun GameScreen(
         }
     }
 }
+
+/** Combo streak milestones that show a floating pill; beyond 5x nothing floats. */
+private val COMBO_FLOAT_MILESTONES = setOf(2, 3, 5)
 
 /** Approximate the center of a grid cell in root coordinates (shared by power-up and combo spawn animations). */
 private fun estimateCellCenter(index: Int, density: Density): Offset {
