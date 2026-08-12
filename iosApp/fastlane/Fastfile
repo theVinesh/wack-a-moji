@@ -297,4 +297,17 @@ platform :ios do
 
     deliver(**deliver_options)
   end
+
+  desc "Print recent builds (build number, short version, processing state)"
+  lane :inspect_builds do
+    app = Spaceship::ConnectAPI::App.find(ios_app_identifier)
+    builds = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      sort: "-version",
+      limit: 10
+    )
+    builds.each do |build|
+      UI.message("INSPECT build##{build.version} short=#{build.app_version || '?'} state=#{build.processing_state}")
+    end
+  end
 end
