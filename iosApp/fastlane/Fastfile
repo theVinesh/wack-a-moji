@@ -300,9 +300,11 @@ platform :ios do
 
   desc "Print recent builds (build number, short version, processing state)"
   lane :inspect_builds do
+    api_key = app_store_api_key
     app = Spaceship::ConnectAPI::App.find(ios_app_identifier)
     builds = Spaceship::ConnectAPI::Build.all(
       app_id: app.id,
+      api_key: api_key,
       sort: "-version",
       limit: 10
     )
