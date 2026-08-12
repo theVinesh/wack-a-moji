@@ -4,6 +4,9 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.gradle.api.tasks.Copy
 
 private val githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+// Monotonic versionCode shared across every workflow (GITHUB_RUN_NUMBER is per-workflow,
+// so two pipelines would collide). Minutes since epoch: always increasing, fits Int for decades.
+private val androidVersionCode = (System.currentTimeMillis() / 60_000L).toInt()
 private val canonicalBackgroundMusicSource = "src/androidMain/res/raw/loop.mp3"
 private val canonicalWackSoundEffectSource = "src/androidMain/res/raw/wack.mp3"
 private val canonicalClickSoundEffectSource = "src/androidMain/res/raw/click.mp3"
@@ -106,7 +109,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
 
-        versionCode = githubRunNumber
+        versionCode = androidVersionCode
         versionName = "1.0.$githubRunNumber"
     }
 

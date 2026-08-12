@@ -258,7 +258,7 @@ platform :ios do
     build_number = latest_testflight_build_number(
       api_key: api_key,
       app_identifier: ios_app_identifier
-    )
+    ).to_s
     UI.message("Submitting build #{build_number} (version #{version_string}) for App Store review")
 
     deliver_options = {
