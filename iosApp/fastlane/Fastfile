@@ -235,4 +235,53 @@ platform :ios do
 
     deliver(**deliver_options)
   end
+
+  desc "Submit the latest TestFlight build for App Store review"
+  lane :submit_for_review do
+    missing = missing_upload_requirements
+    UI.user_error!("Missing App Store Connect API credentials for review submission: #{missing.join(', ')}") if missing.any?
+
+    api_key = app_store_api_key
+    ensure_editable_ios_app_store_version!
+
+    app = Spaceship::ConnectAPI::App.find(ios_app_identifier)
+    platform = Spaceship::ConnectAPI::Platform::IOS
+    edit_version = app.get_edit_app_store_version(platform: platform)
+    version_string = edit_version.version_string
+
+    metadata_path = File.expand_path("metadata", __dir__)
+    screenshots_path = File.expand_path("screenshots", __dir__)
+
+    sync_metadata
+    sync_screenshots
+
+    build_number = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: ios_app_identifier
+    )
+    UI.message("Submitting build #{build_number} (version #{version_string}) for App Store review")
+
+    deliver_options = {
+      api_key: api_key,
+      app_identifier: ios_app_identifier,
+      app_version: version_string,
+      build_number: build_number,
+      metadata_path: metadata_path,
+      skip_binary_upload: true,
+      skip_app_version_update: true,
+      submit_for_review: true,
+      run_precheck_before_submit: false,
+      force: true
+    }
+
+    if Dir.exist?(screenshots_path)
+      ENV["FASTLANE_ENABLE_BETA_DELIVER_SYNC_SCREENSHOTS"] = "true"
+      deliver_options[:screenshots_path] = screenshots_path
+      deliver_options[:sync_screenshots] = true
+    else
+      deliver_options[:skip_screenshots] = true
+    end
+
+    deliver(**deliver_options)
+  end
 end
