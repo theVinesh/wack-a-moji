@@ -255,11 +255,20 @@ platform :ios do
     sync_metadata
     sync_screenshots
 
-    build_number = latest_testflight_build_number(
-      api_key: api_key,
-      app_identifier: ios_app_identifier
-    ).to_s
-    UI.message("Submitting build #{build_number} (version #{version_string}) for App Store review")
+    # Latest TestFlight build may still be processing (not submittable);
+    # take the newest build whose processing state is VALID instead.
+    ready_builds = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      sort: "-version",
+      limit: 30
+    )
+    ready_build = ready_builds.find { |build| build.processing_state == "VALID" }
+    unless ready_build
+      states = ready_builds.map(&:processing_state).uniq.join(", ")
+      UI.user_error!("No VALID build ready for App Store submission (seen states: #{states})")
+    end
+    build_number = ready_build.version.to_s
+    UI.message("Submitting build ##{build_number} (version #{version_string}) for App Store review")
 
     deliver_options = {
       api_key: api_key,
@@ -271,6 +280,10 @@ platform :ios do
       skip_app_version_update: true,
       submit_for_review: true,
       run_precheck_before_submit: false,
+      submission_information: {
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false
+      },
       force: true
     }
 
