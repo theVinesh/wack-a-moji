@@ -15,8 +15,8 @@ jobs:
       contents: write
       actions: write # to dispatch the build run on the bump commit
     outputs:
-      should_build: ${{ steps.bump.outputs.should_build }}
-      release_version: ${{ steps.bump.outputs.release_version }}
+      should_build: ${{ steps.bump.outputs.should_build || steps.export.outputs.should_build }}
+      release_version: ${{ steps.bump.outputs.release_version || steps.export.outputs.release_version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -26,6 +26,8 @@ jobs:
       - name: Auto-bump patch version on main pushes
         id: bump
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }} # gh inside Actions does not read GITHUB_TOKEN automatically
         run: |
           set -euo pipefail
           current="$(tr -d '[:space:]' < version.txt)"
@@ -72,8 +74,11 @@ jobs:
           echo "should_build=true" >> "$GITHUB_OUTPUT"
 
       - name: Export build gate for non-main events
+        id: export
         if: github.event_name != 'push' || github.ref != 'refs/heads/main'
-        run: echo "should_build=true" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "should_build=true" >> "$GITHUB_OUTPUT"
+          echo "release_version=$(tr -d '[:space:]' < version.txt)" >> "$GITHUB_OUTPUT"
 
   test:
     name: Run Unit Tests
