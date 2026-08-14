@@ -7,8 +7,75 @@ on:
     branches: [ "main" ]
 
 jobs:
+  version-check:
+    name: Version Gate & Auto-Bump
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      should_build: ${{ steps.bump.outputs.should_build }}
+      release_version: ${{ steps.bump.outputs.release_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2 # HEAD + parent, to compare version.txt against the previous commit
+
+      - name: Auto-bump patch version on main pushes
+        id: bump
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          current="$(tr -d '[:space:]' < version.txt)"
+          prev="$(git show HEAD~1:version.txt 2>/dev/null | tr -d '[:space:]' || true)"
+
+          # If this commit already bumped the version (human or bot), build it as-is.
+          if [ -n "$prev" ] && [ "$current" = "$prev" ]; then
+            if ! printf '%s' "$current" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::version.txt must be x.y.z (e.g. 1.0.83), got: '$current'"
+              exit 1
+            fi
+            major_minor="${current%.*}"
+            patch="${current##*.}"
+            new="$major_minor.$((10#$patch + 1))"
+            printf '%s\n' "$new" > version.txt
+            git config user.name "wack-a-moji-version-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add version.txt
+            git commit -m "chore: auto-bump version to $new"
+            # Rebase onto any concurrent pushes, retry the push, then hand off:
+            # the bump commit's own push event re-triggers this workflow with
+            # version.txt changed, passes the gate, and runs the real pipeline.
+            for _ in 1 2 3; do
+              git pull --rebase origin main >/dev/null 2>&1 || true
+              if [ "$(tr -d '[:space:]' < version.txt)" != "$new" ]; then
+                echo "Concurrent run already bumped to $(tr -d '[:space:]' < version.txt); standing down."
+                echo "should_build=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              if git push origin HEAD:main >/dev/null 2>&1; then
+                echo "Bumped version to $new; the follow-up run will build it."
+                break
+              fi
+              sleep 2
+            done
+            git push origin HEAD:main >/dev/null 2>&1 || true
+            echo "release_version=$new" >> "$GITHUB_OUTPUT"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "release_version=$current" >> "$GITHUB_OUTPUT"
+          echo "should_build=true" >> "$GITHUB_OUTPUT"
+
+      - name: Export build gate for non-main events
+        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+        run: echo "should_build=true" >> "$GITHUB_OUTPUT"
+
   test:
     name: Run Unit Tests
+    needs: version-check
+    if: needs.version-check.outputs.should_build == 'true'
     runs-on: macos-latest
 
     steps:
@@ -30,9 +97,9 @@ jobs:
 
   build-android:
     name: Build Android App
-    needs: test
+    needs: [test, version-check]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
 
     steps:
       - name: Checkout repository
@@ -83,9 +150,9 @@ jobs:
 
   build-ios:
     name: Build iOS App
-    needs: test
+    needs: [test, version-check]
     runs-on: macos-26
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
 
     steps:
       - name: Checkout repository
@@ -129,9 +196,9 @@ jobs:
 
   build-wasm:
     name: Build & Deploy Web App
-    needs: test
+    needs: [test, version-check]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
     permissions:
       pages: write
       id-token: write
@@ -172,8 +239,8 @@ jobs:
 
   deploy-android:
     name: Deploy Android to Play Internal
-    needs: [build-android]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-android, version-check]
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -213,8 +280,8 @@ jobs:
 
   deploy-ios:
     name: Deploy iOS to TestFlight
-    needs: [build-ios]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-ios, version-check]
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
     runs-on: macos-26
     steps:
       - name: Checkout repository

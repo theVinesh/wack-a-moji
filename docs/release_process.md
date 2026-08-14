@@ -96,6 +96,8 @@ One shared source of truth so both stores show the same version:
 
 - `version.txt` at the repo root holds the user-visible release version (e.g. `1.0.82`). Bump it per release.
 - Android reads it for `versionName`; iOS passes it at build time as `MARKETING_VERSION`.
+- **Patch bumps are automatic**: the `Version Gate & Auto-Bump` job in `Build and Test` bumps the patch (e.g. `1.0.83` → `1.0.84`) on every push to `main` whose commit did not already change `version.txt`, commits it as `chore: auto-bump version to X`, and pushes. That commit's own push event re-triggers the pipeline, which then builds the bumped version. A push that already carries a version change (a manual major/minor bump) builds directly without an extra bump. This keeps the iOS marketing-version train strictly increasing, so App Store Connect never rejects uploads for a closed train.
+- Version numbers are consumed by every `main` push (even failed builds), so expect them to churn quickly during active development — that is intentional.
 
 ### Android
 
@@ -208,7 +210,7 @@ Known Play caveat: only one in-review release is allowed per track. If a previou
 2. Update repo-managed listing content in `store_metadata/`, keeping store text emoji-free and plain-text-safe for both Play and App Store sync.
 3. Generate Android/iOS screenshots with `./capture_screenshots.sh`.
 4. Curate the final App Store screenshots into `store_metadata/assets/screenshots/ios/en-US/`.
-5. Bump `version.txt` (e.g. `1.0.83`).
+5. For a minor/major (or explicit) bump, edit `version.txt` (e.g. `1.1.0`). Patch bumps happen automatically on push — do not bump the patch by hand.
 6. Merge or push the release changes to `main`.
 7. Let `Build and Test` finish:
    - Android AAB uploaded to Play internal draft
