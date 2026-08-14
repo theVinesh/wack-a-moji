@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch: # lets the auto-bump job re-trigger the pipeline on the bump commit
 
 jobs:
   version-check:
@@ -12,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write # to dispatch the build run on the bump commit
     outputs:
       should_build: ${{ steps.bump.outputs.should_build }}
       release_version: ${{ steps.bump.outputs.release_version }}
@@ -44,8 +46,8 @@ jobs:
             git add version.txt
             git commit -m "chore: auto-bump version to $new"
             # Rebase onto any concurrent pushes, retry the push, then hand off:
-            # the bump commit's own push event re-triggers this workflow with
-            # version.txt changed, passes the gate, and runs the real pipeline.
+            # GITHUB_TOKEN pushes do not re-trigger `push` workflows, so kick the
+            # pipeline off explicitly once the bump commit is on main.
             for _ in 1 2 3; do
               git pull --rebase origin main >/dev/null 2>&1 || true
               if [ "$(tr -d '[:space:]' < version.txt)" != "$new" ]; then
@@ -54,12 +56,13 @@ jobs:
                 exit 0
               fi
               if git push origin HEAD:main >/dev/null 2>&1; then
-                echo "Bumped version to $new; the follow-up run will build it."
+                echo "Bumped version to $new; dispatching the pipeline to build it."
+                sleep 2 # let the push propagate before the dispatch resolves main
+                gh workflow run build-and-test.yml --ref main || echo "::warning::could not dispatch build run"
                 break
               fi
               sleep 2
             done
-            git push origin HEAD:main >/dev/null 2>&1 || true
             echo "release_version=$new" >> "$GITHUB_OUTPUT"
             echo "should_build=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -99,7 +102,7 @@ jobs:
     name: Build Android App
     needs: [test, version-check]
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
+    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') && needs.version-check.outputs.should_build == 'true'
 
     steps:
       - name: Checkout repository
@@ -152,7 +155,7 @@ jobs:
     name: Build iOS App
     needs: [test, version-check]
     runs-on: macos-26
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
+    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') && needs.version-check.outputs.should_build == 'true'
 
     steps:
       - name: Checkout repository
@@ -198,7 +201,7 @@ jobs:
     name: Build & Deploy Web App
     needs: [test, version-check]
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
+    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') && needs.version-check.outputs.should_build == 'true'
     permissions:
       pages: write
       id-token: write
@@ -240,7 +243,7 @@ jobs:
   deploy-android:
     name: Deploy Android to Play Internal
     needs: [build-android, version-check]
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
+    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') && needs.version-check.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -281,7 +284,7 @@ jobs:
   deploy-ios:
     name: Deploy iOS to TestFlight
     needs: [build-ios, version-check]
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.version-check.outputs.should_build == 'true'
+    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') && needs.version-check.outputs.should_build == 'true'
     runs-on: macos-26
     steps:
       - name: Checkout repository
