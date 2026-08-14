@@ -422,6 +422,56 @@ class GameViewModelTest {
     }
 
     @Test
+    fun onMoleHit_emptyTapIncrementsMissedTapCount() {
+        val cells = List(9) { CellState() } // no moles up
+        val vm = GameViewModel.createForTest(
+            initialState = GameUiState(running = true, cells = cells),
+        )
+
+        vm.onMoleHit(4)
+        assertEquals(1, vm.uiState.value.missedTapCount)
+
+        vm.onMoleHit(7)
+        assertEquals(2, vm.uiState.value.missedTapCount)
+    }
+
+    @Test
+    fun onMoleHit_scoredHitDoesNotCountAsMiss() {
+        val cells = List(9) { if (it == 2) CellState(isUp = true, contentType = CellContentType.Emoji, content = "😎") else CellState() }
+        val vm = GameViewModel.createForTest(
+            initialState = GameUiState(running = true, cells = cells),
+        )
+
+        vm.onMoleHit(2)
+
+        assertEquals(0, vm.uiState.value.missedTapCount)
+        assertEquals(1, vm.uiState.value.score)
+    }
+
+    @Test
+    fun onMoleHit_missWhilePausedDoesNotCount() {
+        val cells = List(9) { CellState() }
+        val vm = GameViewModel.createForTest(
+            initialState = GameUiState(running = false, cells = cells),
+        )
+
+        vm.onMoleHit(0)
+
+        assertEquals(0, vm.uiState.value.missedTapCount)
+    }
+
+    @Test
+    fun onMoleHit_missAfterGameOverDoesNotCount() {
+        val vm = GameViewModel(
+            screenshotScenario = ScreenshotScenario.GameOver,
+        )
+
+        vm.onMoleHit(0)
+
+        assertEquals(0, vm.uiState.value.missedTapCount)
+    }
+
+    @Test
     fun onMoleHit_visibleMoleIncrementsScore_andPlaysWackOnce() {
         val player = RecordingSoundEffectPlayer()
         val haptics = RecordingHapticFeedback()
@@ -471,7 +521,9 @@ class GameViewModelTest {
 
         vm.onMoleHit(0)
 
-        assertEquals(screenshotStateForScenario(ScreenshotScenario.Gameplay), vm.uiState.value)
+        val state = vm.uiState.value
+        assertEquals(12, state.score)
+        assertEquals(1, state.missedTapCount)
         assertTrue(player.playedEffects.isEmpty())
     }
 

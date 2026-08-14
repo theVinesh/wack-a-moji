@@ -132,6 +132,7 @@ fun GameScreen(
             // Game grid
             GameGrid(
                 cells = state.cells,
+                missedTapCount = state.missedTapCount,
                 onHit = { index -> viewModel.onMoleHit(index) },
                 modifier = Modifier.padding(horizontal = 4.dp)
             )

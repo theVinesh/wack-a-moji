@@ -1,5 +1,7 @@
 package com.thevinesh.wackamoji
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,14 +27,30 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+/** Peak alpha of the red miss flash on the mat (kept low so it reads as a subtle tint). */
+private const val MISS_FLASH_PEAK_ALPHA = 0.35f
+private const val MISS_FLASH_RISE_MS = 110
+private const val MISS_FLASH_FALL_MS = 220
+
 @Composable
 fun GameGrid(
     cells: List<CellState>,
+    missedTapCount: Int = 0,
     onHit: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val largeTargets = LocalPlayerPreferencesStore.current.preferences.largeTargets
+    val reduceMotion = LocalPlayerPreferencesStore.current.preferences.reduceMotion
     val holePadding = moleHoleCellPadding(largeTargets)
+
+    // Momentary red pulse on every empty-tap miss, keyed on the monotonic counter
+    val flashAlpha = remember { Animatable(0f) }
+    LaunchedEffect(missedTapCount, reduceMotion) {
+        if (missedTapCount > 0 && !reduceMotion) {
+            flashAlpha.animateTo(MISS_FLASH_PEAK_ALPHA, tween(MISS_FLASH_RISE_MS))
+            flashAlpha.animateTo(0f, tween(MISS_FLASH_FALL_MS))
+        }
+    }
 
     Box(
         modifier = modifier
@@ -51,6 +71,14 @@ fun GameGrid(
                     size = Size(size.width, 8.dp.toPx()),
                     cornerRadius = CornerRadius(24.dp.toPx())
                 )
+                // Red miss flash overlay on top of the green mat
+                if (flashAlpha.value > 0f) {
+                    drawRoundRect(
+                        color = WackAMojiColors.MissFlashRed.copy(alpha = flashAlpha.value),
+                        cornerRadius = CornerRadius(24.dp.toPx()),
+                        size = size
+                    )
+                }
             }
     ) {
         // 3×3 Grid of holes

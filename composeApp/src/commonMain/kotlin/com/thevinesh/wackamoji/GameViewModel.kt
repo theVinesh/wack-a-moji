@@ -219,6 +219,7 @@ data class GameUiState(
     val lastHitCellIndex: Int? = null, // cell of the most recent scored mole hit
     val lastScoreDelta: Int? = null, // points gained on the most recent scored hit
     val scoredHitCount: Int = 0, // total scored mole hits (unique trigger per hit)
+    val missedTapCount: Int = 0, // total taps on empty holes (unique trigger per miss flash)
 ) {
     val level: Int get() = calculateLevel(score)
     val timerFraction: Float get() = timeLeft.toFloat() / GAME_DURATION_SECONDS.toFloat()
@@ -273,8 +274,13 @@ class GameViewModel internal constructor(
     fun onMoleHit(index: Int) {
         var scoredHit = false
         _uiState.update { state ->
+            if (state.gameOver || !state.running) return@update state
+
             val cell = state.cells[index]
-            if (!cell.isUp || state.gameOver || !state.running) return@update state
+            // Tap on an empty hole: count it so the UI can flash the mat, no penalty
+            if (!cell.isUp) {
+                return@update state.copy(missedTapCount = state.missedTapCount + 1)
+            }
 
             when (cell.contentType) {
                 CellContentType.Emoji -> {
