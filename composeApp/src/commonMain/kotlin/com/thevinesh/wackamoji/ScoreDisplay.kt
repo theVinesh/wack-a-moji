@@ -17,7 +17,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -62,31 +61,12 @@ internal fun ScoreDisplay(
             letterSpacing = (-2).sp,
         )
 
-        // "SCORE" badge — rotated, offset to top-left
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = (-20).dp, y = (-8).dp)
-                .rotate(-12f)
-                .background(Color.White, RoundedCornerShape(50))
-                .border(2.dp, WackAMojiColors.ScoreBadgeBorder, RoundedCornerShape(50))
-                .padding(horizontal = 12.dp, vertical = 4.dp)
-        ) {
-            Text(
-                text = "SCORE",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = WackAMojiColors.Primary,
-            )
-        }
-
-        // "BEST" badge — mirrors SCORE, top-right; shows the record this run is chasing
+        // "BEST" badge — centered above the score; shows the record this run is chasing
         if (bestScore != null && bestScore > 0) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = 20.dp, y = (-8).dp)
-                    .rotate(12f)
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-10).dp)
                     .background(Color.White, RoundedCornerShape(50))
                     .border(2.dp, WackAMojiColors.ScoreBadgeBorder, RoundedCornerShape(50))
                     .padding(horizontal = 12.dp, vertical = 4.dp)

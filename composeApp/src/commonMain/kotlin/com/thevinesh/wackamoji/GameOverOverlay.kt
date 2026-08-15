@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -116,6 +117,7 @@ internal fun GameOverOverlay(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = WackAMojiColors.Primary,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.scale(recordScale.value),
                     )
                 }
@@ -170,8 +172,8 @@ internal fun recordLineText(score: Int, recordInfo: RecordInfo): String = when {
     else -> recordGapText(score = score, bestScore = recordInfo.bestScore)
 }
 
-/** "You were 4 points short of your record!" copy for near-record runs. */
+/** "You were 4 points short of beating your own record" copy for near-record runs. */
 internal fun recordGapText(score: Int, bestScore: Int): String {
     val gap = (bestScore - score).coerceAtLeast(0)
-    return "So close! You were $gap ${if (gap == 1) "point" else "points"} short of your record"
+    return "So close! You were $gap ${if (gap == 1) "point" else "points"} short of beating your own record"
 }

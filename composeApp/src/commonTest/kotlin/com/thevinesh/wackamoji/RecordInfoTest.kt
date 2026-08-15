@@ -54,7 +54,7 @@ class RecordInfoTest {
     @Test
     fun recordGapText_singularPoint() {
         assertEquals(
-            "So close! You were 1 point short of your record",
+            "So close! You were 1 point short of beating your own record",
             recordGapText(score = 24, bestScore = 25),
         )
     }
@@ -62,7 +62,7 @@ class RecordInfoTest {
     @Test
     fun recordGapText_pluralPoints() {
         assertEquals(
-            "So close! You were 4 points short of your record",
+            "So close! You were 4 points short of beating your own record",
             recordGapText(score = 21, bestScore = 25),
         )
     }
@@ -86,7 +86,7 @@ class RecordInfoTest {
     @Test
     fun recordLineText_closeCall_showsGapCopy() {
         assertEquals(
-            "So close! You were 4 points short of your record",
+            "So close! You were 4 points short of beating your own record",
             recordLineText(score = 21, recordInfo = RecordInfo(isNewRecord = false, bestScore = 25)),
         )
     }
@@ -94,7 +94,7 @@ class RecordInfoTest {
     @Test
     fun recordGapText_neverNegative() {
         assertEquals(
-            "So close! You were 0 points short of your record",
+            "So close! You were 0 points short of beating your own record",
             recordGapText(score = 30, bestScore = 25),
         )
     }
