@@ -211,9 +211,18 @@ private fun GameplayAppScreen(
     val backgroundMusicState by gameViewModel.backgroundMusicState.collectAsState()
     val leaderboardStore = LocalLeaderboardStore.current
 
+    // Best score this run is chasing: the record as of run start, updated when a run ends.
+    var runBestScore by remember { mutableStateOf(leaderboardStore.scores.value.firstOrNull()) }
+    var recordInfo by remember { mutableStateOf<RecordInfo?>(null) }
+
     DisposableEffect(state.gameOver) {
-        if (state.gameOver && state.score > 0) {
-            leaderboardStore.addScore(state.score)
+        if (state.gameOver) {
+            val previousBest = leaderboardStore.scores.value.firstOrNull()
+            recordInfo = recordInfoForRun(score = state.score, previousBest = previousBest)
+            if (state.score > 0) {
+                leaderboardStore.addScore(state.score)
+                runBestScore = state.score.coerceAtLeast(previousBest ?: 0).takeIf { it > 0 }
+            }
         }
         onDispose { }
     }
@@ -232,6 +241,7 @@ private fun GameplayAppScreen(
                     score = state.score,
                     level = state.level,
                     mode = state.mode,
+                    recordInfo = recordInfo,
                     onRestart = { gameViewModel.onRestart() },
                     onMenu = onBack,
                 )
@@ -240,6 +250,7 @@ private fun GameplayAppScreen(
     ) {
         GameScreen(
             viewModel = gameViewModel,
+            bestScore = runBestScore,
             onBack = onBack,
         )
     }

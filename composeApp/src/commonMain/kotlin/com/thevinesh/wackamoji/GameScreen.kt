@@ -37,6 +37,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun GameScreen(
     viewModel: GameViewModel = viewModel { GameViewModel() },
+    bestScore: Int? = null,
     onBack: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -94,6 +95,7 @@ fun GameScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 ScoreDisplay(
                     score = state.score,
+                    bestScore = bestScore,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .onGloballyPositioned { coords ->

@@ -1,5 +1,8 @@
 package com.thevinesh.wackamoji
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,9 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,9 +33,24 @@ internal fun GameOverOverlay(
     score: Int,
     level: Int,
     mode: GameMode = GameMode.Classic,
+    recordInfo: RecordInfo? = null,
     onRestart: () -> Unit,
     onMenu: () -> Unit,
 ) {
+    // Pop the record line when it appears (new record or close call)
+    val recordScale = remember { Animatable(1f) }
+    LaunchedEffect(recordInfo) {
+        if (recordInfo != null) {
+            recordScale.animateTo(
+                targetValue = 1.15f,
+                animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)
+            )
+            recordScale.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)
+            )
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -80,6 +100,26 @@ internal fun GameOverOverlay(
                 fontWeight = FontWeight.Bold,
                 color = WackAMojiColors.SkyMedium,
             )
+            recordInfo?.let { info ->
+                Spacer(modifier = Modifier.height(4.dp))
+                if (info.isNewRecord) {
+                    Text(
+                        text = "🏆 NEW RECORD!",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = WackAMojiColors.RestartOrange,
+                        modifier = Modifier.scale(recordScale.value),
+                    )
+                } else {
+                    Text(
+                        text = recordLineText(score = score, recordInfo = info),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = WackAMojiColors.Primary,
+                        modifier = Modifier.scale(recordScale.value),
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             GameButton(
                 text = "PLAY AGAIN",
@@ -102,5 +142,36 @@ internal fun GameOverOverlay(
 @org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 private fun GameOverOverlayPreview() {
-    MaterialTheme { GameOverOverlay(score = 25, level = 3, onRestart = {}, onMenu = {}) }
+    MaterialTheme {
+        GameOverOverlay(score = 25, level = 3, recordInfo = RecordInfo(isNewRecord = true, bestScore = 25), onRestart = {}, onMenu = {})
+    }
+}
+
+@org.jetbrains.compose.ui.tooling.preview.Preview
+@Composable
+private fun GameOverOverlayCloseCallPreview() {
+    MaterialTheme {
+        GameOverOverlay(score = 21, level = 3, recordInfo = RecordInfo(isNewRecord = false, bestScore = 25), onRestart = {}, onMenu = {})
+    }
+}
+
+@org.jetbrains.compose.ui.tooling.preview.Preview
+@Composable
+private fun GameOverOverlayBaselinePreview() {
+    MaterialTheme {
+        GameOverOverlay(score = 25, level = 3, onRestart = {}, onMenu = {})
+    }
+}
+
+/** Copy for the record line on the game-over screen: trophy, tie, or the close-call gap. */
+internal fun recordLineText(score: Int, recordInfo: RecordInfo): String = when {
+    recordInfo.isNewRecord -> "🏆 NEW RECORD!"
+    score == recordInfo.bestScore -> "You matched your record!"
+    else -> recordGapText(score = score, bestScore = recordInfo.bestScore)
+}
+
+/** "You were 4 points short of your record!" copy for near-record runs. */
+internal fun recordGapText(score: Int, bestScore: Int): String {
+    val gap = (bestScore - score).coerceAtLeast(0)
+    return "So close! You were $gap ${if (gap == 1) "point" else "points"} short of your record"
 }

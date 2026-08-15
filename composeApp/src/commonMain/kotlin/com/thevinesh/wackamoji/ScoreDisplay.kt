@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 internal fun ScoreDisplay(
     score: Int,
+    bestScore: Int? = null,
     modifier: Modifier = Modifier,
 ) {
     // Gentle pop whenever the score goes up
@@ -78,6 +79,26 @@ internal fun ScoreDisplay(
                 color = WackAMojiColors.Primary,
             )
         }
+
+        // "BEST" badge — mirrors SCORE, top-right; shows the record this run is chasing
+        if (bestScore != null && bestScore > 0) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 20.dp, y = (-8).dp)
+                    .rotate(12f)
+                    .background(Color.White, RoundedCornerShape(50))
+                    .border(2.dp, WackAMojiColors.ScoreBadgeBorder, RoundedCornerShape(50))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "BEST ${formatScore(bestScore)}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = WackAMojiColors.RestartOrange,
+                )
+            }
+        }
     }
 }
 
@@ -95,5 +116,5 @@ internal fun formatScore(score: Int): String {
 @org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 private fun ScoreDisplayPreview() {
-    MaterialTheme { Surface { ScoreDisplay(score = 42) } }
+    MaterialTheme { Surface { ScoreDisplay(score = 42, bestScore = 47) } }
 }
