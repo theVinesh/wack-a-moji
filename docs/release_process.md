@@ -2,6 +2,15 @@
 
 This is the canonical repo guide for shipping WackAMoji on both Android and iOS.
 
+## Release a production build (tag-driven — prefer this)
+
+1. On `main`, with the tree clean and all CI green: `bash scripts/release-tag.sh --dry-run` to preview the next version, then `bash scripts/release-tag.sh`.
+2. The script derives the next `vX.Y.Z` from conventional commits since the last semver tag (breaking > feat > patch; unknown prefixes count as patch), embeds a changelog in the annotated tag, and pushes it.
+3. The pushed tag triggers `Release to Production` (`.github/workflows/release.yml`), which:
+   - Android: promotes the newest Play **internal** release to the **production** track, staging a generated, per-versionCode changelog.
+   - iOS: submits the newest VALID TestFlight build for App Store review, with generated release notes (pinned from the build's version rather than version.txt).
+4. Use `workflow_dispatch` with `android_only=true` on a tag ref to run just the Android half (e.g. while an App Store submission is already in review).
+
 ## What happens automatically vs manually
 
 - Pushes to `main` run the binary release pipeline only:
