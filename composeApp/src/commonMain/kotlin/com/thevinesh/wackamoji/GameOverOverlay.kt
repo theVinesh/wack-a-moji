@@ -172,8 +172,16 @@ internal fun recordLineText(score: Int, recordInfo: RecordInfo): String = when {
     else -> recordGapText(score = score, bestScore = recordInfo.bestScore)
 }
 
-/** "You were 4 points short of beating your own record" copy for near-record runs. */
+/** Gaps within this many points keep the "So close!" hook; anything further gets plain copy. */
+private const val CLOSE_CALL_GAP_THRESHOLD = 10
+
+/** "You were 4 points short of beating your own record" copy for runs that missed the record. */
 internal fun recordGapText(score: Int, bestScore: Int): String {
     val gap = (bestScore - score).coerceAtLeast(0)
-    return "So close! You were $gap ${if (gap == 1) "point" else "points"} short of beating your own record"
+    val gapCopy = "$gap ${if (gap == 1) "point" else "points"} short of beating your own record"
+    return if (gap in 1..CLOSE_CALL_GAP_THRESHOLD) {
+        "So close! You were $gapCopy"
+    } else {
+        "You were $gapCopy"
+    }
 }

@@ -94,8 +94,24 @@ class RecordInfoTest {
     @Test
     fun recordGapText_neverNegative() {
         assertEquals(
-            "So close! You were 0 points short of beating your own record",
+            "You were 0 points short of beating your own record",
             recordGapText(score = 30, bestScore = 25),
+        )
+    }
+
+    @Test
+    fun recordGapText_closeCallBoundary_isSoClose() {
+        assertEquals(
+            "So close! You were 10 points short of beating your own record",
+            recordGapText(score = 15, bestScore = 25),
+        )
+    }
+
+    @Test
+    fun recordGapText_farGap_showsPlainCopy() {
+        assertEquals(
+            "You were 26 points short of beating your own record",
+            recordGapText(score = 400, bestScore = 426),
         )
     }
 }
