@@ -293,13 +293,13 @@ class GameViewModel internal constructor(
                         lastHitCellIndex = index,
                         lastScoreDelta = gained,
                         scoredHitCount = state.scoredHitCount + 1,
-                        cells = state.cells.toMutableList().also { it[index] = CellState() },
+                        cells = Array(9) { i -> if (i == index) CellState() else state.cells[i] }.asList(),
                     )
                 }
                 CellContentType.PowerUp -> {
                     val updatedState = applyPowerUp(state, cell.powerUpType!!)
                     updatedState.copy(
-                        cells = updatedState.cells.toMutableList().also { it[index] = CellState() },
+                        cells = Array(9) { i -> if (i == index) CellState() else updatedState.cells[i] }.asList(),
                         lastPickedUpPowerUp = cell.powerUpType to index
                     )
                 }
@@ -445,7 +445,7 @@ class GameViewModel internal constructor(
             val adjustedMinTime = if (isSlowdownActive) minTime * 2 else minTime
             val adjustedMaxTime = if (isSlowdownActive) maxTime * 2 else maxTime
 
-            var newCells: MutableList<CellState>? = null
+            var newCells: Array<CellState>? = null
             var missedCount = 0
 
             // Tick down mole visibility timers (skip if freeze is active for emoji cells)
@@ -458,7 +458,7 @@ class GameViewModel internal constructor(
                     if (shouldTick) {
                         remaining[i] = (remaining[i] - DELAY_BETWEEN_MOLES_MS).coerceAtLeast(0L)
                         if (remaining[i] == 0L) {
-                            if (newCells == null) newCells = state.cells.toMutableList()
+                            if (newCells == null) newCells = Array(9) { state.cells[it] }
                             newCells[i] = CellState()
                             // Only count as missed if it's an emoji (not a power-up)
                             if (cell.contentType == CellContentType.Emoji) {
@@ -470,12 +470,12 @@ class GameViewModel internal constructor(
             }
 
             // Maybe spawn a new mole or power-up
-            val cellsToCount = newCells ?: state.cells
+            val cellsToCount = newCells?.asList() ?: state.cells
             val upCount = cellsToCount.count { it.isUp }
             if (upCount < maxMoles) {
                 val idx = Random.nextInt(0, 9)
                 if (!cellsToCount[idx].isUp) {
-                    if (newCells == null) newCells = state.cells.toMutableList()
+                    if (newCells == null) newCells = Array(9) { state.cells[it] }
                     
                     // In endless mode, 5% chance to spawn a power-up instead of emoji
                     val shouldSpawnPowerUp = state.mode == GameMode.Endless && Random.nextFloat() < 0.05f
@@ -505,7 +505,7 @@ class GameViewModel internal constructor(
                 for (i in 0 until 9) {
                     val cell = state.cells[i]
                     if (cell.isUp && cell.contentType == CellContentType.Emoji && cell.content != "🥶") {
-                        if (newCells == null) newCells = state.cells.toMutableList()
+                        if (newCells == null) newCells = Array(9) { state.cells[it] }
                         newCells[i] = cell.copy(content = "🥶")
                     }
                 }
@@ -513,7 +513,7 @@ class GameViewModel internal constructor(
 
             // Update state and tick down power-up timers
             if (newCells != null || missedCount > 0 || isSlowdownActive || isFreezeActive) {
-                val finalCells = newCells ?: state.cells
+                val finalCells = newCells?.asList() ?: state.cells
                 _uiState.update { s ->
                     if (!s.running || s.gameOver) return@update s
                     val updated = applyMoleTimeouts(
