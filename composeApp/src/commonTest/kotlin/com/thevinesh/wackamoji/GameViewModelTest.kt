@@ -291,6 +291,30 @@ class GameViewModelTest {
     }
 
     @Test
+    fun replaceCell_clearsOnlyTheTargetHole() {
+        val up = CellState(isUp = true, contentType = CellContentType.Emoji, content = "😎")
+        val cells = List(9) { if (it == 2 || it == 5) up else CellState() }
+
+        val next = replaceCell(cells, 2)
+
+        assertFalse(next[2].isUp)
+        assertTrue(next[5].isUp)
+        assertEquals(cells[0], next[0])
+        assertEquals(9, next.size)
+    }
+
+    @Test
+    fun replaceCell_canInsertAReplacementCell() {
+        val cells = List(9) { CellState() }
+        val mole = CellState(isUp = true, contentType = CellContentType.Emoji, content = "😂")
+
+        val next = replaceCell(cells, 4, mole)
+
+        assertEquals(mole, next[4])
+        assertEquals(1, next.count { it.isUp })
+    }
+
+    @Test
     fun applyMoleTimeouts_resetsComboInClassicModeWithoutLosingLives() {
         val state = GameUiState(mode = GameMode.Classic, lives = 3, running = true, combo = 6)
         val cells = List(9) { if (it == 1) CellState(isUp = true, contentType = CellContentType.Emoji, content = "😂") else CellState() }
