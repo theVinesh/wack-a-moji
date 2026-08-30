@@ -1,6 +1,6 @@
-WELCOME TO WACK-A-MOJI!
+WELCOME TO WACKAMOJI!
 
-Are you ready for the ultimate test of speed and reflexes? Wack-a-Moji takes the classic arcade whacking game and brings it into the 21st century with your favorite emojis!
+Are you ready for the ultimate test of speed and reflexes? WackAMoji takes the classic arcade whacking game and brings it into the 21st century with your favorite emojis!
 
 Whack those pesky emojis as they pop up from their holes. Choose Classic for a timed challenge, or Endless to keep going until your lives run out. Build combos for bonus points as the levels get harder!
 
@@ -14,6 +14,6 @@ FEATURES:
 - Accessibility options for reduce motion and larger targets
 - Simple and intuitive tap controls
 
-Whether you're waiting for a bus or just looking for a quick fun break, Wack-a-Moji is the perfect companion. How many can you whack?
+Whether you're waiting for a bus or just looking for a quick fun break, WackAMoji is the perfect companion. How many can you whack?
 
 Download now and start whacking!
