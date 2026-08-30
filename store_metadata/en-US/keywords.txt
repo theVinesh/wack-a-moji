@@ -1,1 +1,1 @@
-emoji,game,arcade,whack,mole,reflex,fast,fun,casual,kids,action,whackamole
+emoji,arcade,whack,mole,reflex,casual,whackamole,moji,emoji-game
