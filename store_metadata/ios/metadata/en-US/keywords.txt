@@ -1,1 +1,1 @@
-arcade,emoji,reflex,tapping,casual,family,timer,score,reaction,quickplay
+arcade,emoji,emoji-game,whack,reflex,tapping,casual,family,timer,score,reaction,quickplay
