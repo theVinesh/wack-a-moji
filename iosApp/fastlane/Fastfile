@@ -283,7 +283,10 @@ platform :ios do
     # deleted once builds exist, so retarget the editable version in place
     # (ensure_version! PATCHes versionString when one is already editable).
     edit_version = app.get_edit_app_store_version(platform: platform)
-    if edit_version && edit_version.version_string != target_version
+    if edit_version.nil?
+      UI.message("No editable App Store version found; creating #{target_version}")
+      app.ensure_version!(target_version, platform: platform)
+    elsif edit_version.version_string != target_version
       UI.message("Retargeting editable App Store version #{edit_version.version_string} to #{target_version}")
       app.ensure_version!(target_version, platform: platform)
     end
